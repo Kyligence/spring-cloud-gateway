@@ -19,6 +19,8 @@ package org.springframework.cloud.gateway.sample;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Value;

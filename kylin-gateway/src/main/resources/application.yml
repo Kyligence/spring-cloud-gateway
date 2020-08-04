@@ -1,6 +1,6 @@
 USER-SERVER:
   ribbon:
-    listOfServers: https://www.baidu.com, https://www.google.com
+    listOfServers: https://www.baidu.com, https://google.com
     NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RoundRobinRule
 
 spring:
