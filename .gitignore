@@ -21,3 +21,4 @@ _site/
 .vscode/
 .flattened-pom.xml
 .sdkmanrc
+dist

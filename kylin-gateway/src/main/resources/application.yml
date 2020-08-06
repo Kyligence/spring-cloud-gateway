@@ -1,6 +1,6 @@
 USER-SERVER:
   ribbon:
-    listOfServers: https://www.baidu.com, https://google.com
+    listOfServers: https://www.baidu.com
     NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RoundRobinRule
 
 spring:
@@ -24,3 +24,17 @@ logging:
     org.springframework.web.reactive: DEBUG
     reactor.ipc.netty: DEBUG
     reactor.netty: DEBUG
+
+server:
+  tomcat:
+    basedir: ./
+    accesslog:
+      enabled: true
+      buffered: true
+      directory: logs
+      file-date-format: .yyyy-MM-dd
+      pattern: "%h %l %u %t \"%r\" %s %b %D %{User-Agent}i"
+      rotate: true
+      rename-on-rotate: false
+      prefix: access_log
+      suffix: .log

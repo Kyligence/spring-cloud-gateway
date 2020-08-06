@@ -42,10 +42,11 @@ function start_gateway() {
     echo `date '+%Y-%m-%d %H:%M:%S '`"Starting Gateway..."
 
     gateway_log4j="file:${GATEWAY_HOME}/conf/gateway-log4j.properties"
+    gateway_properties="${GATEWAY_HOME}/conf/gateway.properties"
 
     cd ${GATEWAY_HOME}/server
 
-    nohup java -Dfile.encoding=UTF-8 -Dlogging.path=${GATEWAY_HOME}/logs -Dlogging.config=${gateway_log4j} -Dloader.path="${GATEWAY_HOME}/server/jars" -jar gateway.jar >> ${GATEWAY_HOME}/logs/gateway.log 2>&1 < /dev/null & echo $! > ${GATEWAY_HOME}/pid &
+    nohup java -Dfile.encoding=UTF-8 -Dlogging.path=${GATEWAY_HOME}/logs -Dspring.config.additional-location=${gateway_properties} -Dlogging.config=${gateway_log4j} -Dloader.path="${GATEWAY_HOME}/server/jars" -jar gateway.jar >> ${GATEWAY_HOME}/logs/gateway.log 2>&1 < /dev/null & echo $! > ${GATEWAY_HOME}/pid &
 
     PID=`cat ${GATEWAY_HOME}/pid`
     echo $(date "+%Y-%m-%d %H:%M:%S ") "new Gateway process pid is "${PID} >> ${GATEWAY_HOME}/logs/gateway.log

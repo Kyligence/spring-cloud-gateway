@@ -1,0 +1,55 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0"
+		  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		  xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+	<id>kylin-assembly</id>
+	<formats>
+		<format>tar.gz</format>
+	</formats>
+
+	<includeBaseDirectory>true</includeBaseDirectory>
+
+	<dependencySets>
+		<dependencySet>
+			<unpack>false</unpack>
+			<scope>runtime</scope>
+			<outputDirectory>server/jars</outputDirectory>
+			<useProjectArtifact>false</useProjectArtifact>
+		</dependencySet>
+	</dependencySets>
+
+	<fileSets>
+		<fileSet>
+			<directory>../build/bin</directory>
+			<outputDirectory>bin</outputDirectory>
+			<includes>
+				<include>gateway.sh</include>
+			</includes>
+			<fileMode>0755</fileMode>
+		</fileSet>
+		<fileSet>
+			<directory>../build/conf</directory>
+			<outputDirectory>conf</outputDirectory>
+			<fileMode>0644</fileMode>
+		</fileSet>
+		<fileSet>
+			<directory>.</directory>
+			<outputDirectory>logs</outputDirectory>
+			<excludes>
+				<exclude>*/**</exclude>
+			</excludes>
+		</fileSet>
+	</fileSets>
+	<files>
+		<file>
+			<source>target/kylin-gateway-2.2.3.RELEASE.jar</source>
+			<outputDirectory>server</outputDirectory>
+			<fileMode>0644</fileMode>
+			<destName>gateway.jar</destName>
+		</file>
+		<file>
+			<source>target/commit_SHA1</source>
+			<outputDirectory>.</outputDirectory>
+			<fileMode>0644</fileMode>
+		</file>
+	</files>
+</assembly>
