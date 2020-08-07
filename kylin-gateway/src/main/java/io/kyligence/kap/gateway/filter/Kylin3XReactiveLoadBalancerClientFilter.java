@@ -1,8 +1,9 @@
 package io.kyligence.kap.gateway.filter;
 
 import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.DummyPing;
 import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.IPing;
+import com.netflix.loadbalancer.IPingStrategy;
 import com.netflix.loadbalancer.RoundRobinRule;
 import com.netflix.loadbalancer.Server;
 import io.kyligence.kap.gateway.utils.AsyncQueryUtil;
@@ -22,29 +23,33 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
 
-public class Kylin3XReactiveLoadBalancerClientFilter extends LoadBalancerClientFilter implements ApplicationListener<RefreshRoutesEvent> {
+public class Kylin3XReactiveLoadBalancerClientFilter extends LoadBalancerClientFilter
+		implements ApplicationListener<RefreshRoutesEvent> {
 
 	private static final String ASYNC_SUFFIX = "/async_query";
 
 	private Map<String, Kylin3XLoadBalancer> resourceGroups = new ConcurrentHashMap<>();
 
 	public Kylin3XReactiveLoadBalancerClientFilter(LoadBalancerClient loadBalancer,
-												   LoadBalancerProperties properties) {
+			LoadBalancerProperties properties, IPing ping, IPingStrategy pingStrategy,
+			int pingIntervalSeconds) {
 		super(loadBalancer, properties);
 
-		Kylin3XLoadBalancer balancer = new Kylin3XLoadBalancer("USER-SERVER",
-				new DummyPing(), new RoundRobinRule());
-		balancer.addServer(new Server("10.1.2.56:7070"));
+		Kylin3XLoadBalancer balancer = new Kylin3XLoadBalancer("USER-SERVER", ping,
+				new RoundRobinRule(), pingStrategy);
+		// balancer.addServer(new Server("10.1.2.56:7070"));
 		balancer.addServer(new Server("10.1.2.166:7070"));
-		balancer.addServer(new Server("10.1.2.167:7070"));
-		balancer.addServer(new Server("10.1.2.168:7070"));
+		// balancer.addServer(new Server("10.1.2.167:7070"));
+		// balancer.addServer(new Server("10.1.2.168:7070"));
+		balancer.setPingInterval(pingIntervalSeconds);
 
 		Kylin3XLoadBalancer balancerAsync = new Kylin3XLoadBalancer("USER-SERVER-ASYNC",
-				new DummyPing(), new RoundRobinRule());
-		balancerAsync.addServer(new Server("10.1.2.56:7070"));
+				ping, new RoundRobinRule(), pingStrategy);
+		balancerAsync.setPingInterval(pingIntervalSeconds);
+		// balancerAsync.addServer(new Server("10.1.2.56:7070"));
 		balancerAsync.addServer(new Server("10.1.2.166:7070"));
-		balancerAsync.addServer(new Server("10.1.2.167:7070"));
-		balancerAsync.addServer(new Server("10.1.2.168:7070"));
+		// balancerAsync.addServer(new Server("10.1.2.167:7070"));
+		// balancerAsync.addServer(new Server("10.1.2.168:7070"));
 
 		resourceGroups.put(balancer.getServiceId(), balancer);
 		resourceGroups.put(balancerAsync.getServiceId(), balancerAsync);
@@ -84,7 +89,8 @@ public class Kylin3XReactiveLoadBalancerClientFilter extends LoadBalancerClientF
 					AsyncQueryUtil.ASYNC_QUERY_SUFFIX_TAG);
 		}
 
-		return serviceInstance != null ? serviceInstance : choose(uri.getAuthority(), null);
+		return serviceInstance != null ? serviceInstance
+				: choose(uri.getAuthority(), null);
 	}
 
 	@Override
@@ -99,7 +105,8 @@ public class Kylin3XReactiveLoadBalancerClientFilter extends LoadBalancerClientF
 		updateResourceGroups.forEach(resourceGroup -> {
 			if (resourceGroup instanceof Kylin3XLoadBalancer) {
 				Kylin3XLoadBalancer kylin3XLoadBalancer = ((Kylin3XLoadBalancer) resourceGroup);
-				newResourceGroups.put(kylin3XLoadBalancer.getServiceId(), kylin3XLoadBalancer);
+				newResourceGroups.put(kylin3XLoadBalancer.getServiceId(),
+						kylin3XLoadBalancer);
 			}
 		});
 
@@ -111,8 +118,10 @@ public class Kylin3XReactiveLoadBalancerClientFilter extends LoadBalancerClientF
 		addResourceGroups.forEach(resourceGroup -> {
 			if (resourceGroup instanceof Kylin3XLoadBalancer) {
 				Kylin3XLoadBalancer kylin3XLoadBalancer = ((Kylin3XLoadBalancer) resourceGroup);
-				resourceGroups.putIfAbsent(kylin3XLoadBalancer.getServiceId(), kylin3XLoadBalancer);
+				resourceGroups.putIfAbsent(kylin3XLoadBalancer.getServiceId(),
+						kylin3XLoadBalancer);
 			}
 		});
 	}
+
 }

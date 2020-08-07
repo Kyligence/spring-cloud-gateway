@@ -13,12 +13,19 @@ import java.util.stream.Collectors;
 @Data
 @Slf4j
 public class KylinRouteRaw {
+
 	private long id;
+
 	private String stringBackends;
+
 	private List<Server> backends;
+
 	private String project;
+
 	private String resourceGroup;
+
 	private String type;
+
 	private String cluster;
 
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -31,22 +38,20 @@ public class KylinRouteRaw {
 		this.cluster = kylinRouteDO.getCluster();
 		this.stringBackends = kylinRouteDO.getBackends();
 		try {
-			List<String> instances = OBJECT_MAPPER.readValue(kylinRouteDO.getBackends(), List.class);
+			List<String> instances = OBJECT_MAPPER.readValue(kylinRouteDO.getBackends(),
+					List.class);
 			backends = instances.stream().map(Server::new).collect(Collectors.toList());
-		} catch (JsonProcessingException e) {
+		}
+		catch (JsonProcessingException e) {
 			log.error("Failed to read backends.", e);
 		}
 	}
 
 	@Override
 	public String toString() {
-		return "KylinRouteRaw{" +
-				"id=" + id +
-				", backends='" + stringBackends + '\'' +
-				", project='" + project + '\'' +
-				", resourceGroup='" + resourceGroup + '\'' +
-				", type='" + type + '\'' +
-				", cluster='" + cluster + '\'' +
-				'}';
+		return "KylinRouteRaw{" + "id=" + id + ", backends='" + stringBackends + '\''
+				+ ", project='" + project + '\'' + ", resourceGroup='" + resourceGroup
+				+ '\'' + ", type='" + type + '\'' + ", cluster='" + cluster + '\'' + '}';
 	}
+
 }

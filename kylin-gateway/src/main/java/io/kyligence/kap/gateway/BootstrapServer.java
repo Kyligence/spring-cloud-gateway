@@ -16,49 +16,36 @@
 
 package io.kyligence.kap.gateway;
 
-import io.kyligence.kap.gateway.entity.KylinRouteRaw;
-import io.kyligence.kap.gateway.persistent.domain.KylinRouteDO;
-import org.springframework.boot.CommandLineRunner;
+import com.netflix.loadbalancer.IPingStrategy;
+import com.netflix.loadbalancer.PingUrl;
+import io.kyligence.kap.gateway.health.ConcurrentPingStrategy;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * @author zhiyu.zeng
  */
 
 @SpringBootApplication
-public class BootstrapServer implements CommandLineRunner {
+public class BootstrapServer {
+
+	private static final String KYLIN_HEALTH_PATH = "/kylin/api/health";
 
 	public static void main(String[] args) {
 		SpringApplication.run(BootstrapServer.class, args);
 	}
 
 	@Bean
-	@ConfigurationProperties(prefix = "kylin.rest.connection")
-	public HttpComponentsClientHttpRequestFactory httpRequestFactory() {
-		return new HttpComponentsClientHttpRequestFactory();
+	public PingUrl pingUrl() {
+		return new PingUrl(Boolean.FALSE, KYLIN_HEALTH_PATH);
 	}
 
 	@Bean
-	public RestTemplate restTemplate() {
-		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.setRequestFactory(httpRequestFactory());
-		return restTemplate;
+	@ConfigurationProperties(prefix = "kylin.gateway.health")
+	public IPingStrategy pingStrategy() {
+		return new ConcurrentPingStrategy();
 	}
 
-	public void testGetKylinRouteRow() {
-		KylinRouteDO kylinRouteDO = new KylinRouteDO(1, "[\"10.1.2.56:7070\",\"10.1.2.166:7070\",\"10.1.2.167:7070\"]",
-				"project1", "common_query_1", "CUBE", "1c4b3f35-21f9-44b2-a2de-ae2d5a94189f");
-		KylinRouteRaw kylinRouteRaw = new KylinRouteRaw(kylinRouteDO);
-		System.out.println(kylinRouteRaw.getBackends());
-	}
-
-	@Override
-	public void run(String... args) throws Exception {
-		testGetKylinRouteRow();
-	}
 }

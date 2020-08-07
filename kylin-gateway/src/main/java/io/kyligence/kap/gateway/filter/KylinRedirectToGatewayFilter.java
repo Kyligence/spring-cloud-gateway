@@ -19,14 +19,17 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 
 public class KylinRedirectToGatewayFilter implements GlobalFilter, Ordered {
-	private static final Logger logger = LoggerFactory.getLogger(KylinRedirectToGatewayFilter.class);
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(KylinRedirectToGatewayFilter.class);
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		final ServerHttpResponse response = exchange.getResponse();
 		final URI uri = exchange.getRequest().getURI();
 
-		ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(response) {
+		ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(
+				response) {
 			@SuppressWarnings("serial")
 			@Override
 			public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
@@ -38,16 +41,24 @@ public class KylinRedirectToGatewayFilter implements GlobalFilter, Ordered {
 					int i = -1;
 					if (StringUtils.isEmpty(location)) {
 						logger.error("Can not redirect URI, cause by location is empty!");
-					} else if ((i = location.indexOf('/', 8)) < 0) {
-						// redirect URI must be have sub url, like http://authoriy/kylin/api/xxxx
-						logger.error("Can not redirect URI, cause by location: {}", location);
-					} else {
+					}
+					else if ((i = location.indexOf('/', 8)) < 0) {
+						// redirect URI must be have sub url, like
+						// http://authoriy/kylin/api/xxxx
+						logger.error("Can not redirect URI, cause by location: {}",
+								location);
+					}
+					else {
 						try {
 							String redirectLocation = String.format("%s://%s%s",
-									uri.getScheme(), uri.getAuthority(), location.substring(i));
-							logger.debug("Redirect URL :{} to {} ", location, redirectLocation);
-							headers.put(HttpHeaders.LOCATION, Lists.newArrayList(redirectLocation));
-						} catch (Exception e) {
+									uri.getScheme(), uri.getAuthority(),
+									location.substring(i));
+							logger.debug("Redirect URL :{} to {} ", location,
+									redirectLocation);
+							headers.put(HttpHeaders.LOCATION,
+									Lists.newArrayList(redirectLocation));
+						}
+						catch (Exception e) {
 							logger.error("Failed to redirect location: {}", location, e);
 						}
 					}
@@ -64,4 +75,5 @@ public class KylinRedirectToGatewayFilter implements GlobalFilter, Ordered {
 	public int getOrder() {
 		return NettyWriteResponseFilter.WRITE_RESPONSE_FILTER_ORDER - 1;
 	}
+
 }

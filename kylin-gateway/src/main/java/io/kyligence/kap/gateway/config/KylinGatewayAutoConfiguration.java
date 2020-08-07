@@ -2,7 +2,6 @@ package io.kyligence.kap.gateway.config;
 
 import io.kyligence.kap.gateway.filter.KylinRedirectToGatewayFilter;
 import io.kyligence.kap.gateway.route.IRouteTableReader;
-import io.kyligence.kap.gateway.route.MockRouteTableReader;
 import io.kyligence.kap.gateway.route.RefreshRouteTableScheduler;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -23,10 +22,10 @@ import org.springframework.web.reactive.DispatcherHandler;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "spring.cloud.gateway.enabled", matchIfMissing = true)
 @EnableConfigurationProperties
-@AutoConfigureBefore({HttpHandlerAutoConfiguration.class,
-		WebFluxAutoConfiguration.class})
-@AutoConfigureAfter({GatewayLoadBalancerClientAutoConfiguration.class,
-		GatewayClassPathWarningAutoConfiguration.class})
+@AutoConfigureBefore({ HttpHandlerAutoConfiguration.class,
+		WebFluxAutoConfiguration.class })
+@AutoConfigureAfter({ GatewayLoadBalancerClientAutoConfiguration.class,
+		GatewayClassPathWarningAutoConfiguration.class })
 @ConditionalOnClass(DispatcherHandler.class)
 public class KylinGatewayAutoConfiguration {
 
@@ -40,15 +39,12 @@ public class KylinGatewayAutoConfiguration {
 		return new KylinRedirectToGatewayFilter();
 	}
 
-	@Bean
-	public IRouteTableReader routeTableReader() {
-		return new MockRouteTableReader();
+	public RefreshRouteTableScheduler refreshRouteTableScheduler(
+			IRouteTableReader routeTableReader,
+			AbstractGatewayControllerEndpoint gatewayControllerEndpoint,
+			LoadBalancerClientFilter loadBalancerClientFilter) {
+		return new RefreshRouteTableScheduler(routeTableReader, gatewayControllerEndpoint,
+				loadBalancerClientFilter);
 	}
 
-
-	public RefreshRouteTableScheduler refreshRouteTableScheduler(IRouteTableReader routeTableReader,
-																 AbstractGatewayControllerEndpoint gatewayControllerEndpoint,
-																 LoadBalancerClientFilter loadBalancerClientFilter) {
-		return new RefreshRouteTableScheduler(routeTableReader, gatewayControllerEndpoint, loadBalancerClientFilter);
-	}
 }

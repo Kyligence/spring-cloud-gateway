@@ -4,14 +4,18 @@ import com.google.common.collect.Lists;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.DummyPing;
 import com.netflix.loadbalancer.IPing;
+import com.netflix.loadbalancer.IPingStrategy;
+import com.netflix.loadbalancer.PingUrl;
 import com.netflix.loadbalancer.RoundRobinRule;
 import io.kyligence.kap.gateway.constant.KylinResourceGroupTypeEnum;
 import io.kyligence.kap.gateway.entity.KylinRouteRaw;
 import io.kyligence.kap.gateway.filter.Kylin3XLoadBalancer;
+import io.kyligence.kap.gateway.health.ConcurrentPingStrategy;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.actuate.AbstractGatewayControllerEndpoint;
 import org.springframework.cloud.gateway.actuate.GatewayControllerEndpoint;
 import org.springframework.cloud.gateway.actuate.GatewayLegacyControllerEndpoint;
@@ -39,7 +43,8 @@ import static io.kyligence.kap.gateway.constant.KylinRouteConstant.PREDICATE_ARG
 @EnableScheduling
 public class RefreshRouteTableScheduler implements ApplicationEventPublisherAware {
 
-	private static final Logger logger = LoggerFactory.getLogger(RefreshRouteTableScheduler.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(RefreshRouteTableScheduler.class);
 
 	protected ApplicationEventPublisher publisher;
 
@@ -47,13 +52,17 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 
 	private LoadBalancerClientFilter loadBalancerClientFilter;
 
-	protected IPing ping = new DummyPing();
-
 	private IRouteTableReader routeTableReader;
 
+	@Autowired
+	private PingUrl ping;
+
+	@Autowired
+	private IPingStrategy pingStrategy;
+
 	public RefreshRouteTableScheduler(IRouteTableReader routeTableReader,
-									  AbstractGatewayControllerEndpoint gatewayControllerEndpoint,
-									  LoadBalancerClientFilter loadBalancerClientFilter) {
+			AbstractGatewayControllerEndpoint gatewayControllerEndpoint,
+			LoadBalancerClientFilter loadBalancerClientFilter) {
 		this.routeTableReader = routeTableReader;
 		this.gatewayControllerEndpoint = gatewayControllerEndpoint;
 		this.loadBalancerClientFilter = loadBalancerClientFilter;
@@ -73,7 +82,8 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 		return "lb://" + resourceGroup;
 	}
 
-	private RouteDefinition convert2RouteDefinition(KylinRouteRaw routeRaw) throws URISyntaxException {
+	private RouteDefinition convert2RouteDefinition(KylinRouteRaw routeRaw)
+			throws URISyntaxException {
 		RouteDefinition routeDefinition = new RouteDefinition();
 
 		String uuid = routeRaw.getCluster() + "-" + routeRaw.getId();
@@ -83,20 +93,20 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 		routeDefinition.setPredicates(Lists.newArrayList(predicateDefinition));
 
 		switch (KylinResourceGroupTypeEnum.valueOf(routeRaw.getType())) {
-			case CUBE:
-			case ASYNC:
-				predicateDefinition.setName(KYLIN_ROUTE_PREDICATE);
-				predicateDefinition.getArgs().put(PREDICATE_ARG_KEY_0, routeRaw.getProject());
-				routeDefinition.setOrder(0);
-				break;
-			case GLOBAL:
-				predicateDefinition.setName("Path");
-				predicateDefinition.getArgs().put(PREDICATE_ARG_KEY_0, "/**");
-				routeDefinition.setOrder(Integer.MAX_VALUE);
-				break;
-			default:
-				routeDefinition.setOrder(Integer.MAX_VALUE - 1);
-				logger.warn("Route Table must have type!");
+		case CUBE:
+		case ASYNC:
+			predicateDefinition.setName(KYLIN_ROUTE_PREDICATE);
+			predicateDefinition.getArgs().put(PREDICATE_ARG_KEY_0, routeRaw.getProject());
+			routeDefinition.setOrder(0);
+			break;
+		case GLOBAL:
+			predicateDefinition.setName("Path");
+			predicateDefinition.getArgs().put(PREDICATE_ARG_KEY_0, "/**");
+			routeDefinition.setOrder(Integer.MAX_VALUE);
+			break;
+		default:
+			routeDefinition.setOrder(Integer.MAX_VALUE - 1);
+			logger.warn("Route Table must have type!");
 		}
 
 		routeDefinition.setUri(new URI(getStringURI(routeRaw.getResourceGroup())));
@@ -105,8 +115,8 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 	}
 
 	private Kylin3XLoadBalancer convert2Kylin3XLoadBalancer(KylinRouteRaw routeRaw) {
-		Kylin3XLoadBalancer kylin3XLoadBalancer =
-				new Kylin3XLoadBalancer(routeRaw.getResourceGroup(), ping, new RoundRobinRule());
+		Kylin3XLoadBalancer kylin3XLoadBalancer = new Kylin3XLoadBalancer(
+				routeRaw.getResourceGroup(), ping, new RoundRobinRule(), pingStrategy);
 
 		kylin3XLoadBalancer.addServers(routeRaw.getBackends());
 		return kylin3XLoadBalancer;
@@ -129,12 +139,12 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 
 			try {
 				URI uri = new URI(getStringURI(kylinRouteRaw.getResourceGroup()));
-				if (Objects.isNull(uri.getHost())
-						|| Objects.isNull(uri.getAuthority())
+				if (Objects.isNull(uri.getHost()) || Objects.isNull(uri.getAuthority())
 						|| Objects.isNull(uri.getScheme())) {
 					return true;
 				}
-			} catch (URISyntaxException e) {
+			}
+			catch (URISyntaxException e) {
 				return true;
 			}
 
@@ -147,7 +157,8 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 
 		if (CollectionUtils.isNotEmpty(errorList)) {
 			checkResult = true;
-			errorList.stream().forEach(kylinRouteRaw -> logger.error("Error Route: {}", kylinRouteRaw));
+			errorList.stream().forEach(
+					kylinRouteRaw -> logger.error("Error Route: {}", kylinRouteRaw));
 		}
 
 		return checkResult;
@@ -170,11 +181,13 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 			for (KylinRouteRaw routeRaw : routeRawList) {
 				try {
 					RouteDefinition routeDefinition = convert2RouteDefinition(routeRaw);
-					Kylin3XLoadBalancer loadBalancer = convert2Kylin3XLoadBalancer(routeRaw);
+					Kylin3XLoadBalancer loadBalancer = convert2Kylin3XLoadBalancer(
+							routeRaw);
 
 					routeDefinitionList.add(routeDefinition);
 					loadBalancerList.add(loadBalancer);
-				} catch (Exception e) {
+				}
+				catch (Exception e) {
 					logger.error("Failed to convert KylinRouteRaw, {}", routeRaw, e);
 				}
 			}
@@ -182,25 +195,34 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 			this.loadBalancerClientFilter.addResourceGroups(loadBalancerList);
 
 			if (gatewayControllerEndpoint instanceof GatewayControllerEndpoint) {
-				((GatewayControllerEndpoint) gatewayControllerEndpoint).routes().subscribe(tRoute -> {
-					gatewayControllerEndpoint.delete((String) tRoute.get("route_id")).subscribe();
-				});
-			} else if (gatewayControllerEndpoint instanceof GatewayLegacyControllerEndpoint) {
-				((GatewayLegacyControllerEndpoint) gatewayControllerEndpoint).routes().subscribe(tRouteList -> {
-					tRouteList.forEach(tRoute -> {
-						gatewayControllerEndpoint.delete((String) tRoute.get("route_id")).subscribe();
-					});
-				});
+				((GatewayControllerEndpoint) gatewayControllerEndpoint).routes()
+						.subscribe(tRoute -> {
+							gatewayControllerEndpoint
+									.delete((String) tRoute.get("route_id")).subscribe();
+						});
+			}
+			else if (gatewayControllerEndpoint instanceof GatewayLegacyControllerEndpoint) {
+				((GatewayLegacyControllerEndpoint) gatewayControllerEndpoint).routes()
+						.subscribe(tRouteList -> {
+							tRouteList.forEach(tRoute -> {
+								gatewayControllerEndpoint
+										.delete((String) tRoute.get("route_id"))
+										.subscribe();
+							});
+						});
 			}
 
 			routeDefinitionList.forEach(routeDefinition -> {
-				gatewayControllerEndpoint.save(routeDefinition.getId(), routeDefinition).subscribe();
+				gatewayControllerEndpoint.save(routeDefinition.getId(), routeDefinition)
+						.subscribe();
 			});
 
 			publisher.publishEvent(new RefreshRoutesEvent(this));
 			this.loadBalancerClientFilter.updateResourceGroups(loadBalancerList);
-		} catch (Exception e) {
-			logger.error("Failed to get route table from {}!", routeTableReader.getClass(), e);
+		}
+		catch (Exception e) {
+			logger.error("Failed to get route table from {}!",
+					routeTableReader.getClass(), e);
 		}
 
 	}

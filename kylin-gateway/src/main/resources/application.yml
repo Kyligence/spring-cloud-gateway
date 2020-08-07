@@ -3,6 +3,17 @@ spring:
     enabled: false
   cloud:
     gateway:
+      routes:
+      - id: kylin
+        uri: lb://USER-SERVER
+        order: 9000
+        predicates:
+        - Kylin=p1,p2
+      - id: default
+        uri: lb://USER-SERVER
+        order: 22333
+        predicates:
+        - Path=/**
       httpclient:
         connectTimeout: 3000
         responseTimeout: 480000
@@ -37,5 +48,16 @@ kylin:
       refresh-cron: 0/30 * * * * *
     ke:
       version: 3x
+    health:
+      retry-times: 3
+      timeout-seconds: 3000
+      interval-seconds: 10
+    datasource:
+      type: jdbc
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/leotest
+      username: root
+      password: passw0rd
+      table-name: km_route_table
 
 server.port: 7777

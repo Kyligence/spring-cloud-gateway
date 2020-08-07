@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class KylinRoutePredicateFactory extends AbstractRoutePredicateFactory<KylinRoutePredicateFactory.Config> {
+public class KylinRoutePredicateFactory
+		extends AbstractRoutePredicateFactory<KylinRoutePredicateFactory.Config> {
+
 	private static final Log log = LogFactory.getLog(KylinRoutePredicateFactory.class);
 
 	private static final String PROJECT_KEY = "project";
@@ -69,8 +71,8 @@ public class KylinRoutePredicateFactory extends AbstractRoutePredicateFactory<Ky
 	}
 
 	private boolean testHeader(ServerWebExchange exchange, Config config) {
-		List<String> values = exchange.getRequest().getHeaders()
-				.getOrDefault(PROJECT_KEY, Collections.emptyList());
+		List<String> values = exchange.getRequest().getHeaders().getOrDefault(PROJECT_KEY,
+				Collections.emptyList());
 		return testBasic(values, config);
 	}
 
@@ -94,7 +96,8 @@ public class KylinRoutePredicateFactory extends AbstractRoutePredicateFactory<Ky
 							}
 					}
 				}
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				log.error("Failed to check project from body!", e);
 			}
 
@@ -117,14 +120,16 @@ public class KylinRoutePredicateFactory extends AbstractRoutePredicateFactory<Ky
 						boolean test = predicate.test(cachedBody);
 						exchange.getAttributes().put(TEST_ATTRIBUTE, test);
 						return Mono.just(test);
-					} catch (ClassCastException e) {
+					}
+					catch (ClassCastException e) {
 						if (log.isDebugEnabled()) {
 							log.debug("Predicate test failed because class in predicate "
 									+ "does not match the cached body object", e);
 						}
 					}
 					return Mono.just(false);
-				} else {
+				}
+				else {
 					if (testHeader(exchange, config) || testQuery(exchange, config)) {
 						return Mono.just(true);
 					}
@@ -142,7 +147,8 @@ public class KylinRoutePredicateFactory extends AbstractRoutePredicateFactory<Ky
 
 			@Override
 			public String toString() {
-				return String.format("Projects: %s", Arrays.toString(config.getProjects().toArray()));
+				return String.format("Projects: %s",
+						Arrays.toString(config.getProjects().toArray()));
 			}
 		};
 	}
@@ -156,6 +162,7 @@ public class KylinRoutePredicateFactory extends AbstractRoutePredicateFactory<Ky
 
 	@Validated
 	public static class Config {
+
 		private List<String> projects = Lists.newArrayList();
 
 		public List<String> getProjects() {
@@ -165,5 +172,7 @@ public class KylinRoutePredicateFactory extends AbstractRoutePredicateFactory<Ky
 		public void setProjects(List<String> projects) {
 			this.projects = projects;
 		}
+
 	}
+
 }
