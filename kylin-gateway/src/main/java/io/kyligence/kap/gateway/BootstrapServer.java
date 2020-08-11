@@ -42,9 +42,9 @@ public class BootstrapServer {
 	}
 
 	@Bean
-	public RestTemplate restTemplate() {
+	public RestTemplate restTemplate(HttpComponentsClientHttpRequestFactory httpRequestFactory) {
 		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.setRequestFactory(httpRequestFactory());
+		restTemplate.setRequestFactory(httpRequestFactory);
 		return restTemplate;
 	}
 
