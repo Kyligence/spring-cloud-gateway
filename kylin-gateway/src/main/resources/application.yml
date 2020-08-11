@@ -3,17 +3,6 @@ spring:
     enabled: false
   cloud:
     gateway:
-      routes:
-      - id: kylin
-        uri: lb://USER-SERVER
-        order: 9000
-        predicates:
-        - Kylin=p1,p2
-      - id: default
-        uri: lb://USER-SERVER
-        order: 22333
-        predicates:
-        - Path=/**
       httpclient:
         connectTimeout: 3000
         responseTimeout: 480000
