@@ -3,7 +3,6 @@ package io.kyligence.kap.gateway.route;
 import io.kyligence.kap.gateway.entity.KylinRouteRaw;
 import io.kyligence.kap.gateway.persistent.KylinRouteRowMapper;
 import io.kyligence.kap.gateway.persistent.domain.KylinRouteDO;
-import io.kyligence.kap.gateway.route.IRouteTableReader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 

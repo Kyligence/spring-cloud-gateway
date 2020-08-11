@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -28,9 +27,9 @@ public class ConcurrentPingStrategy implements IPingStrategy {
 
 	private ExecutorService executorService;
 
-	private long timeoutSeconds;
-
 	private int retryTimes;
+
+	private int intervalSeconds;
 
 	@Override
 	public boolean[] pingServers(IPing ping, Server[] servers) {
@@ -51,8 +50,7 @@ public class ConcurrentPingStrategy implements IPingStrategy {
 
 		for (int i = 0; i < numCandidates; i++) {
 			try {
-				results[i] = (Boolean) futures[i].get(timeoutSeconds,
-						TimeUnit.MILLISECONDS);
+				results[i] = (Boolean) futures[i].get();
 			}
 			catch (Exception e) {
 				log.error("Task execute failed, server: {}", servers[i]);

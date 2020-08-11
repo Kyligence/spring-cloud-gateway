@@ -3,12 +3,12 @@ package io.kyligence.kap.gateway.route;
 import com.google.common.collect.Lists;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.IPingStrategy;
-import com.netflix.loadbalancer.PingUrl;
 import com.netflix.loadbalancer.RoundRobinRule;
 import io.kyligence.kap.gateway.constant.KylinResourceGroupTypeEnum;
 import io.kyligence.kap.gateway.entity.KylinRouteRaw;
 import io.kyligence.kap.gateway.event.Kylin3XRefreshRoutesEvent;
 import io.kyligence.kap.gateway.filter.Kylin3XLoadBalancer;
+import io.kyligence.kap.gateway.health.KylinPing;
 import io.kyligence.kap.gateway.utils.AsyncQueryUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -54,7 +54,7 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 	private IRouteTableReader routeTableReader;
 
 	@Autowired
-	private PingUrl ping;
+	private KylinPing ping;
 
 	@Autowired
 	private IPingStrategy pingStrategy;

@@ -17,12 +17,13 @@
 package io.kyligence.kap.gateway;
 
 import com.netflix.loadbalancer.IPingStrategy;
-import com.netflix.loadbalancer.PingUrl;
 import io.kyligence.kap.gateway.health.ConcurrentPingStrategy;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * @author zhiyu.zeng
@@ -30,20 +31,25 @@ import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class BootstrapServer {
-
-	private static final String KYLIN_HEALTH_PATH = "/kylin/api/health";
-
 	public static void main(String[] args) {
 		SpringApplication.run(BootstrapServer.class, args);
 	}
 
 	@Bean
-	public PingUrl pingUrl() {
-		return new PingUrl(Boolean.FALSE, KYLIN_HEALTH_PATH);
+	@ConfigurationProperties(prefix = "kylin.gateway.health.rest-template")
+	public HttpComponentsClientHttpRequestFactory httpRequestFactory() {
+		return new HttpComponentsClientHttpRequestFactory();
 	}
 
 	@Bean
-	@ConfigurationProperties(prefix = "kylin.gateway.health")
+	public RestTemplate restTemplate() {
+		RestTemplate restTemplate = new RestTemplate();
+		restTemplate.setRequestFactory(httpRequestFactory());
+		return restTemplate;
+	}
+
+	@Bean
+	@ConfigurationProperties(prefix = "kylin.gateway.health.ping-strategy")
 	public IPingStrategy pingStrategy() {
 		return new ConcurrentPingStrategy();
 	}
