@@ -18,6 +18,10 @@ package io.kyligence.kap.gateway;
 
 import com.netflix.loadbalancer.IPingStrategy;
 import io.kyligence.kap.gateway.health.ConcurrentPingStrategy;
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -38,7 +42,9 @@ public class BootstrapServer {
 	@Bean
 	@ConfigurationProperties(prefix = "kylin.gateway.health.rest-template")
 	public HttpComponentsClientHttpRequestFactory httpRequestFactory() {
-		return new HttpComponentsClientHttpRequestFactory();
+		HttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+		HttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager).setConnectionManagerShared(true).build();
+		return new HttpComponentsClientHttpRequestFactory(httpClient);
 	}
 
 	@Bean

@@ -182,27 +182,8 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 		return checkResult;
 	}
 
-	// to be optimized
-	private boolean isRouteTableChange(List<KylinRouteRaw> newRouteRawList) {
-		if (this.oldRouteRawList.size() != newRouteRawList.size()) {
-			return true;
-		}
-
-		int size = newRouteRawList.size();
-		for (KylinRouteRaw routeRaw : newRouteRawList) {
-			for (KylinRouteRaw oldRouteRaw : this.oldRouteRawList) {
-				if (routeRaw.toString().equals(oldRouteRaw.toString())) {
-					size--;
-					break;
-				}
-			}
-		}
-
-		if (size != 0) {
-			return true;
-		}
-
-		return false;
+	private boolean isRouteTableNotChange(List<KylinRouteRaw> newRouteRawList) {
+		return CollectionUtils.isEqualCollection(newRouteRawList, oldRouteRawList);
 	}
 
 	private boolean isNullExist(Collection objectList) {
@@ -221,7 +202,7 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 	@Scheduled(cron = "${kylin.gateway.route-table.refresh-cron}")
 	public synchronized void run() {
 		try {
-			List<KylinRouteRaw> routeRawList = this.routeTableReader.list();
+			List<KylinRouteRaw> routeRawList = routeTableReader.list();
 			if (CollectionUtils.isEmpty(routeRawList)) {
 				// do not permit to clear route table
 				logger.error("Failed to refresh route table, cause by new route table is empty!");
@@ -233,7 +214,7 @@ public class RefreshRouteTableScheduler implements ApplicationEventPublisherAwar
 				return;
 			}
 
-			if (!isRouteTableChange(routeRawList)) {
+			if (isRouteTableNotChange(routeRawList)) {
 				return;
 			}
 
