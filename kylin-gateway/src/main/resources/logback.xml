@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<!-- gateway log -->
+	<appender name="GATEWAY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<append>true</append>
+		<file>${gateway.home}/logs/gateway.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${gateway.home}/logs/gateway.log.%i</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>256MB</maxFileSize>
+		</triggeringPolicy>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<!-- The level of these packages inherits root does not take effect -->
+	<logger name="reactor.netty.resources" level="INFO" additivity="false"/>
+	<logger name="reactor.netty.http" level="INFO" additivity="false" />
+	<logger name="com.netflix.loadbalancer" level="INFO" additivity="false"/>
+	<logger name="reactor.netty.channel" level="INFO" additivity="false"/>
+	<logger name="org.springframework.cloud.gateway.handler" level="INFO" additivity="false"/>
+	<logger name="org.springframework.cloud.gateway.filter" level="INFO" additivity="false"/>
+	<logger name="org.springframework.cloud.gateway.route" level="INFO" additivity="false"/>
+
+	<!-- access log -->
+	<appender name="ACCESS-LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<append>true</append>
+		<file>${gateway.home}/logs/access_log.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<FileNamePattern>${gateway.home}/logs/access_log.%d{yyyy-MM-dd}.log</FileNamePattern>
+			<MaxHistory>30</MaxHistory>
+		</rollingPolicy>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<pattern>%msg%n</pattern>
+			<charset>UTF-8</charset>
+		</encoder>
+	</appender>
+
+	<appender name="async" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="ACCESS-LOG"/>
+	</appender>
+
+	<logger name="reactor.netty.http.server.AccessLog"  additivity="false">
+		<appender-ref ref="async"/>
+	</logger>
+
+	<!-- console -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<!-- root -->
+	<root level="INFO">
+		<appender-ref ref="GATEWAY"/>
+		<appender-ref ref="STDOUT"/>
+	</root>
+</configuration>

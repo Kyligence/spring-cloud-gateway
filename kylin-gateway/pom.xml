@@ -18,11 +18,10 @@
 	</parent>
 
 	<properties>
-		<log4j.version>1.2.17</log4j.version>
-		<slf4j.version>1.7.25</slf4j.version>
 		<lombok.version>1.18.2</lombok.version>
 		<guava.version>19.0</guava.version>
 		<commons-collections.version>3.2.2</commons-collections.version>
+		<maven.build.timestamp.format>yyyy_MM_dd_HH_mm</maven.build.timestamp.format>
 		<commons-io.version>2.4</commons-io.version>
 	</properties>
 
@@ -30,12 +29,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-logging</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -58,10 +51,6 @@
 					<artifactId>guava</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-log4j2</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -141,6 +130,8 @@
 					</execution>
 				</executions>
 				<configuration>
+					<finalName>${project.artifactId}-${maven.build.timestamp}</finalName>
+					<appendAssemblyId>false</appendAssemblyId>
 					<descriptors>
 						<descriptor>src/assembly/assembly.xml</descriptor>
 					</descriptors>
