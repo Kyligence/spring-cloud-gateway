@@ -26,13 +26,13 @@ import static io.kyligence.kap.gateway.constant.KylinRouteConstant.DEFAULT_RESOU
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.QUERY_SUFFIX;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
 
-public class Kylin3XReactiveLoadBalancerClientFilter extends LoadBalancerClientFilter
+public class Kylin3XLoadBalancerClientFilter extends LoadBalancerClientFilter
 		implements ApplicationListener<RefreshRoutesEvent> {
 
-	private Map<String, Kylin3XLoadBalancer> resourceGroups = new ConcurrentHashMap<>();
+	private Map<String, KylinLoadBalancer> resourceGroups = new ConcurrentHashMap<>();
 
-	public Kylin3XReactiveLoadBalancerClientFilter(LoadBalancerClient loadBalancer,
-												   LoadBalancerProperties properties) {
+	public Kylin3XLoadBalancerClientFilter(LoadBalancerClient loadBalancer,
+										   LoadBalancerProperties properties) {
 		super(loadBalancer, properties);
 	}
 
@@ -100,25 +100,25 @@ public class Kylin3XReactiveLoadBalancerClientFilter extends LoadBalancerClientF
 
 	@Override
 	public void updateResourceGroups(List<BaseLoadBalancer> updateResourceGroups, final long mvcc) {
-		ConcurrentHashMap<String, Kylin3XLoadBalancer> newResourceGroups = new ConcurrentHashMap<>();
+		ConcurrentHashMap<String, KylinLoadBalancer> newResourceGroups = new ConcurrentHashMap<>();
 
 		updateResourceGroups.forEach(resourceGroup -> {
-			if (resourceGroup instanceof Kylin3XLoadBalancer) {
-				Kylin3XLoadBalancer kylin3XLoadBalancer = ((Kylin3XLoadBalancer) resourceGroup);
+			if (resourceGroup instanceof KylinLoadBalancer) {
+				KylinLoadBalancer kylin3XLoadBalancer = ((KylinLoadBalancer) resourceGroup);
 				newResourceGroups.put(kylin3XLoadBalancer.getServiceId(), kylin3XLoadBalancer);
 			}
 		});
 
-		Collection<Kylin3XLoadBalancer> oldResourceGroups = resourceGroups.values();
+		Collection<KylinLoadBalancer> oldResourceGroups = resourceGroups.values();
 		resourceGroups = newResourceGroups;
-		oldResourceGroups.stream().filter(lb -> lb.getMvcc() < mvcc).forEach(Kylin3XLoadBalancer::shutdown);
+		oldResourceGroups.stream().filter(lb -> lb.getMvcc() < mvcc).forEach(KylinLoadBalancer::shutdown);
 	}
 
 	@Override
 	public void addResourceGroups(List<BaseLoadBalancer> addResourceGroups) {
 		addResourceGroups.forEach(resourceGroup -> {
-			if (resourceGroup instanceof Kylin3XLoadBalancer) {
-				Kylin3XLoadBalancer kylin3XLoadBalancer = ((Kylin3XLoadBalancer) resourceGroup);
+			if (resourceGroup instanceof KylinLoadBalancer) {
+				KylinLoadBalancer kylin3XLoadBalancer = ((KylinLoadBalancer) resourceGroup);
 				resourceGroups.putIfAbsent(kylin3XLoadBalancer.getServiceId(),
 						kylin3XLoadBalancer);
 			}
@@ -127,6 +127,6 @@ public class Kylin3XReactiveLoadBalancerClientFilter extends LoadBalancerClientF
 
 	@Override
 	public Map<String, Object> getLoadBalancerServers() {
-		return resourceGroups.values().stream().collect(Collectors.toMap(Kylin3XLoadBalancer::getServiceId, value -> Arrays.toString(value.getAllServers().toArray())));
+		return resourceGroups.values().stream().collect(Collectors.toMap(KylinLoadBalancer::getServiceId, value -> Arrays.toString(value.getAllServers().toArray())));
 	}
 }

@@ -56,6 +56,8 @@ public class RouteDefinition {
 
 	private int order = 0;
 
+	private boolean broken = false;
+
 	public RouteDefinition() {
 	}
 
@@ -154,4 +156,11 @@ public class RouteDefinition {
 				+ ", metadata=" + metadata + '}';
 	}
 
+	public boolean isBroken() {
+		return broken;
+	}
+
+	public void setBroken(boolean broken) {
+		this.broken = broken;
+	}
 }

@@ -52,6 +52,16 @@ public final class ServerWebExchangeUtils {
 
 	private static final Log log = LogFactory.getLog(ServerWebExchangeUtils.class);
 
+	public static final String PROJECT_KEY = "project";
+
+	public static final String PROJECTS_KEY = "projects";
+
+	public static final String PROJECT_FLAG = "project_flag";
+
+	public static final String CACHE_REQUEST_BODY_OBJECT_KEY = "cachedRequestBodyObject";
+
+	public static final String READ_REQUEST_BODY_OBJECT_KEY = "readRequestBodyObject";
+
 	/**
 	 * Preserve-Host header attribute name.
 	 */
@@ -184,7 +194,7 @@ public final class ServerWebExchangeUtils {
 	}
 
 	public static boolean setResponseStatus(ServerWebExchange exchange,
-			HttpStatus httpStatus) {
+											HttpStatus httpStatus) {
 		boolean response = exchange.getResponse().setStatusCode(httpStatus);
 		if (!response && log.isWarnEnabled()) {
 			log.warn("Unable to set status code to " + httpStatus
@@ -194,7 +204,7 @@ public final class ServerWebExchangeUtils {
 	}
 
 	public static boolean setResponseStatus(ServerWebExchange exchange,
-			HttpStatusHolder statusHolder) {
+											HttpStatusHolder statusHolder) {
 		if (exchange.getResponse().isCommitted()) {
 			return false;
 		}
@@ -222,8 +232,7 @@ public final class ServerWebExchangeUtils {
 			try {
 				UriComponentsBuilder.fromUri(uri).build(true);
 				return true;
-			}
-			catch (IllegalArgumentException ignore) {
+			} catch (IllegalArgumentException ignore) {
 				if (log.isTraceEnabled()) {
 					log.trace("Error in containsEncodedParts", ignore);
 				}
@@ -241,8 +250,7 @@ public final class ServerWebExchangeUtils {
 		try {
 			int status = Integer.parseInt(statusString);
 			httpStatus = HttpStatus.resolve(status);
-		}
-		catch (NumberFormatException e) {
+		} catch (NumberFormatException e) {
 			// try the enum string
 			httpStatus = HttpStatus.valueOf(statusString.toUpperCase());
 		}
@@ -278,7 +286,7 @@ public final class ServerWebExchangeUtils {
 
 	@SuppressWarnings("unchecked")
 	public static void putUriTemplateVariables(ServerWebExchange exchange,
-			Map<String, String> uriVariables) {
+											   Map<String, String> uriVariables) {
 		if (exchange.getAttributes().containsKey(URI_TEMPLATE_VARIABLES_ATTRIBUTE)) {
 			Map<String, Object> existingVariables = (Map<String, Object>) exchange
 					.getAttributes().get(URI_TEMPLATE_VARIABLES_ATTRIBUTE);
@@ -286,8 +294,7 @@ public final class ServerWebExchangeUtils {
 			newVariables.putAll(existingVariables);
 			newVariables.putAll(uriVariables);
 			exchange.getAttributes().put(URI_TEMPLATE_VARIABLES_ATTRIBUTE, newVariables);
-		}
-		else {
+		} else {
 			exchange.getAttributes().put(URI_TEMPLATE_VARIABLES_ATTRIBUTE, uriVariables);
 		}
 	}
@@ -305,13 +312,14 @@ public final class ServerWebExchangeUtils {
 	 * {@link #CACHED_SERVER_HTTP_REQUEST_DECORATOR_ATTR} respectively. This method is
 	 * useful when the {@link ServerWebExchange} can not be modified, such as a
 	 * {@link RoutePredicateFactory}.
+	 *
 	 * @param exchange the available ServerWebExchange.
 	 * @param function a function that accepts the created ServerHttpRequestDecorator.
-	 * @param <T> generic type for the return {@link Mono}.
+	 * @param <T>      generic type for the return {@link Mono}.
 	 * @return Mono of type T created by the function parameter.
 	 */
 	public static <T> Mono<T> cacheRequestBodyAndRequest(ServerWebExchange exchange,
-			Function<ServerHttpRequest, Mono<T>> function) {
+														 Function<ServerHttpRequest, Mono<T>> function) {
 		return cacheRequestBody(exchange, true, function);
 	}
 
@@ -319,13 +327,14 @@ public final class ServerWebExchangeUtils {
 	 * Caches the request body in a ServerWebExchange attributes. The attribute is
 	 * {@link #CACHED_REQUEST_BODY_ATTR}. This method is useful when the
 	 * {@link ServerWebExchange} can be mutated, such as a {@link GatewayFilterFactory}/
+	 *
 	 * @param exchange the available ServerWebExchange.
 	 * @param function a function that accepts the created ServerHttpRequestDecorator.
-	 * @param <T> generic type for the return {@link Mono}.
+	 * @param <T>      generic type for the return {@link Mono}.
 	 * @return Mono of type T created by the function parameter.
 	 */
 	public static <T> Mono<T> cacheRequestBody(ServerWebExchange exchange,
-			Function<ServerHttpRequest, Mono<T>> function) {
+											   Function<ServerHttpRequest, Mono<T>> function) {
 		return cacheRequestBody(exchange, false, function);
 	}
 
@@ -335,17 +344,18 @@ public final class ServerWebExchangeUtils {
 	 * can not mutate the ServerWebExchange (such as a Predicate), setting
 	 * cacheDecoratedRequest to true will put a {@link ServerHttpRequestDecorator} in an
 	 * attribute {@link #CACHED_SERVER_HTTP_REQUEST_DECORATOR_ATTR} for adaptation later.
-	 * @param exchange the available ServerWebExchange.
+	 *
+	 * @param exchange              the available ServerWebExchange.
 	 * @param cacheDecoratedRequest if true, the ServerHttpRequestDecorator will be
-	 * cached.
-	 * @param function a function that accepts a ServerHttpRequest. It can be the created
-	 * ServerHttpRequestDecorator or the originial if there is no body.
-	 * @param <T> generic type for the return {@link Mono}.
+	 *                              cached.
+	 * @param function              a function that accepts a ServerHttpRequest. It can be the created
+	 *                              ServerHttpRequestDecorator or the originial if there is no body.
+	 * @param <T>                   generic type for the return {@link Mono}.
 	 * @return Mono of type T created by the function parameter.
 	 */
 	private static <T> Mono<T> cacheRequestBody(ServerWebExchange exchange,
-			boolean cacheDecoratedRequest,
-			Function<ServerHttpRequest, Mono<T>> function) {
+												boolean cacheDecoratedRequest,
+												Function<ServerHttpRequest, Mono<T>> function) {
 		ServerHttpResponse response = exchange.getResponse();
 		NettyDataBufferFactory factory = (NettyDataBufferFactory) response
 				.bufferFactory();
@@ -358,7 +368,7 @@ public final class ServerWebExchangeUtils {
 	}
 
 	private static ServerHttpRequest decorate(ServerWebExchange exchange,
-			DataBuffer dataBuffer, boolean cacheDecoratedRequest) {
+											  DataBuffer dataBuffer, boolean cacheDecoratedRequest) {
 		if (dataBuffer.readableByteCount() > 0) {
 			if (log.isTraceEnabled()) {
 				log.trace("retaining body in exchange attribute");

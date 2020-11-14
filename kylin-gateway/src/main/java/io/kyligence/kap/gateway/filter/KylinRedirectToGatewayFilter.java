@@ -38,27 +38,20 @@ public class KylinRedirectToGatewayFilter implements GlobalFilter, Ordered {
 					HttpHeaders headers = getDelegate().getHeaders();
 					String location = headers.getFirst(HttpHeaders.LOCATION);
 
-					int i = -1;
+					int i;
 					if (StringUtils.isEmpty(location)) {
-						logger.error("Can not redirect URI, cause by location is empty!");
-					}
-					else if ((i = location.indexOf('/', 8)) < 0) {
+						// Nothing to do
+					} else if ((i = location.indexOf('/', 8)) < 0) {
 						// redirect URI must be have sub url, like
 						// http://authoriy/kylin/api/xxxx
-						logger.error("Can not redirect URI, cause by location: {}",
-								location);
-					}
-					else {
+						logger.error("Can not redirect URI, cause by location format: {}", location);
+					} else {
 						try {
 							String redirectLocation = String.format("%s://%s%s",
-									uri.getScheme(), uri.getAuthority(),
-									location.substring(i));
-							logger.debug("Redirect URL :{} to {} ", location,
-									redirectLocation);
-							headers.put(HttpHeaders.LOCATION,
-									Lists.newArrayList(redirectLocation));
-						}
-						catch (Exception e) {
+									uri.getScheme(), uri.getAuthority(), location.substring(i));
+							logger.debug("Redirect URL :{} to {} ", location, redirectLocation);
+							headers.put(HttpHeaders.LOCATION, Lists.newArrayList(redirectLocation));
+						} catch (Exception e) {
 							logger.error("Failed to redirect location: {}", location, e);
 						}
 					}

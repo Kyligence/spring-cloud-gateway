@@ -1,15 +1,15 @@
 package io.kyligence.kap.gateway.entity;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.netflix.loadbalancer.Server;
-import io.kyligence.kap.gateway.persistent.domain.KylinRouteDO;
+import io.kyligence.kap.gateway.persistent.domain.Kylin3XRouteDO;
+import io.kyligence.kap.gateway.persistent.domain.KylinRouteTableDO;
 import io.kyligence.kap.gateway.persistent.domain.RouteDO;
+import io.kyligence.kap.gateway.utils.JsonUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,8 +19,6 @@ import java.util.stream.Collectors;
 public class KylinRouteRaw {
 
 	private long id;
-
-	private String stringBackends;
 
 	private List<Server> backends;
 
@@ -34,30 +32,58 @@ public class KylinRouteRaw {
 
 	private String cluster;
 
-	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+	public static KylinRouteRaw convert(Kylin3XRouteDO kylin3XRouteDO) {
+		if (null == kylin3XRouteDO) {
+			log.error("Failed to convert KylinRouteDO to KylinRouteRaw, cause by kylinRouteDO is null!");
+			return null;
+		}
 
-	public KylinRouteRaw(KylinRouteDO kylinRouteDO) {
-		this.id = kylinRouteDO.getId();
-		this.project = kylinRouteDO.getProject();
-		this.resourceGroup = kylinRouteDO.getResourceGroup();
-		this.type = kylinRouteDO.getType();
-		this.cluster = kylinRouteDO.getCluster();
-		this.stringBackends = kylinRouteDO.getBackends();
+		KylinRouteRaw kylinRouteRaw = new KylinRouteRaw();
+
+		kylinRouteRaw.id = kylin3XRouteDO.getId();
+
+		kylinRouteRaw.cluster = kylin3XRouteDO.getCluster();
+
+		kylinRouteRaw.project = kylin3XRouteDO.getProject();
+		kylinRouteRaw.type = kylin3XRouteDO.getType();
+
+		kylinRouteRaw.resourceGroup = kylin3XRouteDO.getResourceGroup();
+
 		try {
-			List<String> instances = OBJECT_MAPPER.readValue(kylinRouteDO.getBackends(), List.class);
-			backends = instances.stream().map(Server::new).collect(Collectors.toList());
-		} catch (JsonProcessingException e) {
+			Preconditions.checkNotNull(kylin3XRouteDO.getBackends(), "Route backends is null !");
+
+			List<String> instances = JsonUtil.toObject(kylin3XRouteDO.getBackends(), List.class);
+
+			Preconditions.checkNotNull(instances);
+
+			kylinRouteRaw.backends = instances.stream().map(Server::new).collect(Collectors.toList());
+		} catch (Exception e) {
 			log.error("Failed to read backends.", e);
 		}
+
+		return kylinRouteRaw;
 	}
 
-	public static KylinRouteRaw convert(KylinRouteDO kylinRouteDO) {
+	public static KylinRouteRaw convert(KylinRouteTableDO.KylinRouteDO kylinRouteDO) {
 		if (null == kylinRouteDO) {
 			log.error("Failed to convert KylinRouteDO to KylinRouteRaw, cause by kylinRouteDO is null!");
 			return null;
 		}
 
-		return new KylinRouteRaw(kylinRouteDO);
+		KylinRouteRaw kylinRouteRaw = new KylinRouteRaw();
+
+		kylinRouteRaw.setId(kylinRouteDO.getId());
+		kylinRouteRaw.setOrder(0);
+
+		kylinRouteRaw.setCluster(kylinRouteDO.getClusterId());
+		kylinRouteRaw.setBackends(kylinRouteDO.getBackends());
+
+		kylinRouteRaw.setProject(kylinRouteDO.getProject());
+		kylinRouteRaw.setType(kylinRouteDO.getType());
+
+		kylinRouteRaw.setResourceGroup(kylinRouteDO.getResourceGroup());
+
+		return kylinRouteRaw;
 	}
 
 	public static KylinRouteRaw convert(RouteDO routeDO) {
@@ -68,21 +94,22 @@ public class KylinRouteRaw {
 		KylinRouteRaw kylinRouteRaw = new KylinRouteRaw();
 
 		kylinRouteRaw.setId(routeDO.getId());
-		kylinRouteRaw.setType(routeDO.getType());
 		kylinRouteRaw.setOrder(routeDO.getOrder());
-		kylinRouteRaw.setProject(routeDO.getProject());
-		kylinRouteRaw.setResourceGroup(routeDO.getResourceGroup());
-		kylinRouteRaw.setStringBackends(Arrays.toString(routeDO.getBackends().toArray()));
+
+		kylinRouteRaw.setCluster(routeDO.getCluster());
 		kylinRouteRaw.setBackends(routeDO.getBackends().stream().map(Server::new).collect(Collectors.toList()));
+
+		kylinRouteRaw.setProject(routeDO.getProject());
+		kylinRouteRaw.setType(routeDO.getType());
+
+		kylinRouteRaw.setResourceGroup(routeDO.getResourceGroup());
 
 		return kylinRouteRaw;
 	}
 
 	@Override
 	public String toString() {
-		return "KylinRouteRaw{" + "id=" + id + ", backends='" + stringBackends + '\''
-				+ ", project='" + project + '\'' + ", resourceGroup='" + resourceGroup
-				+ '\'' + ", type='" + type + '\'' + '}';
+		return JsonUtil.toJson(this);
 	}
 
 }

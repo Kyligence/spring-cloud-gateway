@@ -1,13 +1,16 @@
 package io.kyligence.kap.gateway.config;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import io.kyligence.kap.gateway.constant.KylinGatewayVersion;
 import io.kyligence.kap.gateway.entity.KylinJdbcDataSource;
 import io.kyligence.kap.gateway.persistent.FileDataSource;
 import io.kyligence.kap.gateway.route.reader.FileRouteTableReader;
 import io.kyligence.kap.gateway.route.reader.IRouteTableReader;
-import io.kyligence.kap.gateway.route.reader.KylinJdbcRouteTableReader;
+import io.kyligence.kap.gateway.route.reader.Kylin3XJdbcRouteTableReader;
 import io.kyligence.kap.gateway.persistent.KylinJdbcTemplate;
+import io.kyligence.kap.gateway.route.reader.KylinJdbcRouteTableReader;
 import io.kyligence.kap.gateway.route.reader.MockRouteTableReader;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -20,6 +23,9 @@ import javax.sql.DataSource;
 @Configuration
 @EnableConfigurationProperties
 public class KylinRouteTableConfiguration {
+
+	@Value(value = "${kylin.gateway.ke.version:4x}")
+	private String version;
 
 	@Bean
 	@ConditionalOnProperty(name = "kylin.gateway.datasource.type", havingValue = "jdbc")
@@ -36,9 +42,15 @@ public class KylinRouteTableConfiguration {
 				.url(kylinJdbcDataSource.getUrl())
 				.username(kylinJdbcDataSource.getUsername())
 				.password(kylinJdbcDataSource.getPassword()).build();
-		return new KylinJdbcRouteTableReader(
-				new KylinJdbcTemplate(dataSource, kylinJdbcDataSource.getTableName()),
-				kylinJdbcDataSource.getTableName());
+
+		if (KylinGatewayVersion.KYLIN_3X.equals(version)) {
+			return new Kylin3XJdbcRouteTableReader(
+					new KylinJdbcTemplate(dataSource, kylinJdbcDataSource.getTableName()),
+					kylinJdbcDataSource.getTableName());
+		}
+
+		return new KylinJdbcRouteTableReader(new KylinJdbcTemplate(dataSource, kylinJdbcDataSource.getTableName()),
+				kylinJdbcDataSource.getTableName(), kylinJdbcDataSource.getClusterId());
 	}
 
 	@Bean

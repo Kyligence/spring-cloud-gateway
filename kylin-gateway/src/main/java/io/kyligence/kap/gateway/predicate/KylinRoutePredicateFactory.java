@@ -1,7 +1,10 @@
 package io.kyligence.kap.gateway.predicate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
@@ -20,23 +23,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.PROJECTS_KEY;
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.PROJECT_FLAG;
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.PROJECT_KEY;
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.READ_REQUEST_BODY_OBJECT_KEY;
 
 public class KylinRoutePredicateFactory
 		extends AbstractRoutePredicateFactory<KylinRoutePredicateFactory.Config> {
 
 	private static final Log log = LogFactory.getLog(KylinRoutePredicateFactory.class);
-
-	private static final String PROJECT_KEY = "project";
-
-	private static final String PROJECTS_KEY = "projects";
-
-	private static final String TEST_ATTRIBUTE = "read_body_predicate_test_attribute";
-
-	private static final String CACHE_REQUEST_BODY_OBJECT_KEY = "cachedRequestBodyObject";
-
-	private static final String READ_REQUEST_BODY_OBJECT_KEY = "readRequestBodyObject";
 
 	private final List<HttpMessageReader<?>> messageReaders;
 
@@ -58,13 +57,30 @@ public class KylinRoutePredicateFactory
 		return ShortcutType.GATHER_LIST;
 	}
 
-	private boolean testBasic(List<String> projects, Config config) {
-		if (projects.isEmpty()) {
+	private void setAttribute(ServerWebExchange exchange, String key, String value) {
+		exchange.getAttributes().put(key, value);
+	}
+
+	private void setProject(ServerWebExchange exchange, String project) {
+		setAttribute(exchange, PROJECT_KEY, project);
+		setAttribute(exchange, PROJECT_FLAG, project);
+	}
+
+	private void removeAttribute(ServerWebExchange exchange, String key) {
+		exchange.getAttributes().remove(key);
+	}
+
+	private void removeProjectTag(ServerWebExchange exchange) {
+		removeAttribute(exchange, PROJECT_FLAG);
+	}
+
+	private boolean testBasic(String targetProject, Config config) {
+		if (StringUtils.isBlank(targetProject)) {
 			return false;
 		}
 
 		for (String project : config.getProjects()) {
-			if (projects.stream().anyMatch(value -> value.equalsIgnoreCase(project))) {
+			if (targetProject.equalsIgnoreCase(project)) {
 				return true;
 			}
 		}
@@ -72,41 +88,56 @@ public class KylinRoutePredicateFactory
 		return false;
 	}
 
-	private boolean testHeader(ServerWebExchange exchange, Config config) {
-		List<String> values = exchange.getRequest().getHeaders().getOrDefault(PROJECT_KEY, Collections.emptyList());
-		return testBasic(values, config);
+	private boolean testBasic(String targetProject, Config config, ServerWebExchange exchange) {
+		boolean test = testBasic(targetProject, config);
+		if (test) {
+			removeProjectTag(exchange);
+		}
+
+		return test;
 	}
 
-	private boolean testQuery(ServerWebExchange exchange, Config config) {
-		List<String> values = exchange.getRequest().getQueryParams()
-				.getOrDefault(PROJECT_KEY, Collections.emptyList());
-		return testBasic(values, config);
+	private boolean testProjectsAndMark(ServerWebExchange exchange, Config config, List<String> projects) {
+		if (CollectionUtils.isEmpty(projects)) {
+			return false;
+		}
+
+		setProject(exchange, projects.get(0));
+		return testBasic(projects.get(0), config, exchange);
 	}
 
 	private Predicate<String> testBodyPredicate(Config config) {
-		return r -> {
-			try {
-				HashMap json = new ObjectMapper().readValue(r, HashMap.class);
-				if (null == json) {
-					return false;
-				}
+		return project -> testBasic(project, config);
+	}
 
-				Optional jsonKey = json.keySet().stream()
-						.filter(key -> key instanceof String && PROJECT_KEY.equalsIgnoreCase((String) key))
-						.findFirst();
+	private String readProjectFromCacheBody(String cacheBody) {
+		if (StringUtils.isBlank(cacheBody)) {
+			return null;
+		}
 
-				if (jsonKey.isPresent()) {
-					for (String project : config.getProjects())
-						if (project.equalsIgnoreCase((String) json.get(jsonKey.get()))) {
-							return true;
-						}
-				}
-			} catch (Exception e) {
-				log.error("Failed to check project from body!", e);
+		try {
+			HashMap json = new ObjectMapper().readValue(cacheBody, HashMap.class);
+			if (null == json) {
+				return null;
 			}
 
-			return false;
-		};
+			Optional jsonKey = json.keySet().stream()
+					.filter(key -> PROJECT_KEY.equalsIgnoreCase(key.toString()))
+					.findFirst();
+
+			if (jsonKey.isPresent()) {
+				return (String) json.get(jsonKey.get());
+			}
+		} catch (Exception e) {
+			log.error("Failed to read project from cache body!", e);
+		}
+
+		return null;
+	}
+
+	private String readProjectFromCacheBody(Object cacheBody) {
+		Preconditions.checkNotNull(cacheBody);
+		return readProjectFromCacheBody(cacheBody.toString());
 	}
 
 	@Override
@@ -117,42 +148,51 @@ public class KylinRoutePredicateFactory
 		return new AsyncPredicate<ServerWebExchange>() {
 			@Override
 			public Publisher<Boolean> apply(ServerWebExchange exchange) {
-				if (testHeader(exchange, config) || testQuery(exchange, config)) {
-					return Mono.just(true);
+				if (Objects.nonNull(exchange.getAttribute(PROJECT_FLAG))) {
+					return Mono.just(testBasic(exchange.getAttribute(PROJECT_KEY), config, exchange));
+				}
+
+				exchange.getAttributes().put(PROJECT_FLAG, "");
+
+				List<String> headerProjects =
+						exchange.getRequest().getHeaders().getOrDefault(PROJECT_KEY, Collections.emptyList());
+				if (CollectionUtils.isNotEmpty(headerProjects)) {
+					return Mono.just(testProjectsAndMark(exchange, config, headerProjects));
+				}
+
+				List<String> queryProjects =
+						exchange.getRequest().getQueryParams().getOrDefault(PROJECT_KEY, Collections.emptyList());
+				if (CollectionUtils.isNotEmpty(queryProjects)) {
+					return Mono.just(testProjectsAndMark(exchange, config, queryProjects));
 				}
 
 				if (exchange.getRequest().getMethod() == HttpMethod.GET) {
 					return Mono.just(false);
 				}
 
-				Object cachedBody = exchange.getAttribute(CACHE_REQUEST_BODY_OBJECT_KEY);
-				if (cachedBody != null) {
-					try {
-						boolean test = predicate.test(cachedBody);
-						exchange.getAttributes().put(TEST_ATTRIBUTE, test);
-						return Mono.just(test);
-					} catch (ClassCastException e) {
-						if (log.isDebugEnabled()) {
-							log.debug("Predicate test failed because class in predicate "
-									+ "does not match the cached body object", e);
-						}
-					}
+				if (Boolean.valueOf(exchange.getAttribute(READ_REQUEST_BODY_OBJECT_KEY))) {
 					return Mono.just(false);
-				} else {
-					if (Boolean.valueOf(exchange.getAttribute(READ_REQUEST_BODY_OBJECT_KEY))) {
-						return Mono.just(false);
-					}
-
-					exchange.getAttributes().put(READ_REQUEST_BODY_OBJECT_KEY, "true");
-					return ServerWebExchangeUtils.cacheRequestBodyAndRequest(exchange,
-							(serverHttpRequest) -> ServerRequest
-									.create(exchange.mutate().request(serverHttpRequest)
-											.build(), messageReaders)
-									.bodyToMono(inClass)
-									.doOnNext(objectValue -> exchange.getAttributes().put(
-											CACHE_REQUEST_BODY_OBJECT_KEY, objectValue))
-									.map(objectValue -> predicate.test(objectValue)));
 				}
+
+				exchange.getAttributes().put(READ_REQUEST_BODY_OBJECT_KEY, "true");
+				return ServerWebExchangeUtils.cacheRequestBodyAndRequest(exchange,
+						serverHttpRequest -> ServerRequest
+								.create(exchange.mutate().request(serverHttpRequest).build(), messageReaders)
+								.bodyToMono(inClass)
+								.map(objectValue -> {
+									//exchange.getAttributes().put(CACHE_REQUEST_BODY_OBJECT_KEY, objectValue);
+									String project = readProjectFromCacheBody(objectValue);
+									if (Objects.nonNull(project)) {
+										setProject(exchange, project);
+									}
+									return project;
+								}).map(project -> {
+									boolean test = predicate.test(project);
+									if (test) {
+										removeProjectTag(exchange);
+									}
+									return test;
+								}));
 			}
 
 			@Override

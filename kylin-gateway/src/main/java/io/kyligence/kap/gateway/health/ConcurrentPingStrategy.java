@@ -3,7 +3,7 @@ package io.kyligence.kap.gateway.health;
 import com.netflix.loadbalancer.IPing;
 import com.netflix.loadbalancer.IPingStrategy;
 import com.netflix.loadbalancer.Server;
-import io.kyligence.kap.gateway.event.Kylin3XRefreshRoutesEvent;
+import io.kyligence.kap.gateway.event.KylinRefreshRoutesEvent;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Data
-public class ConcurrentPingStrategy implements IPingStrategy, ApplicationListener<Kylin3XRefreshRoutesEvent> {
+public class ConcurrentPingStrategy implements IPingStrategy, ApplicationListener<KylinRefreshRoutesEvent> {
 
 	private Map<Server, AtomicInteger> serversStatus = new ConcurrentHashMap<>();
 
@@ -43,7 +43,7 @@ public class ConcurrentPingStrategy implements IPingStrategy, ApplicationListene
 	@Override
 	public boolean[] pingServers(IPing ping, Server[] servers) {
 		if (servers.length < 1) {
-			log.warn("Ping servers is empty!");
+			log.debug("Ping servers is empty!");
 			return new boolean[]{false};
 		}
 
@@ -71,7 +71,7 @@ public class ConcurrentPingStrategy implements IPingStrategy, ApplicationListene
 	}
 
 	@Override
-	public void onApplicationEvent(Kylin3XRefreshRoutesEvent event) {
+	public void onApplicationEvent(KylinRefreshRoutesEvent event) {
 		serversStatus.clear();
 	}
 

@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 /**
  * @author Spencer Gibb
  */
-@RestControllerEndpoint(id = "kylin-gateway")
+@RestControllerEndpoint(id = "gateway")
 public class GatewayControllerEndpoint extends AbstractGatewayControllerEndpoint {
 
 	@Autowired

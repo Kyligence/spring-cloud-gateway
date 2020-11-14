@@ -1,13 +1,18 @@
 package io.kyligence.kap.gateway.constant;
 
 public enum KylinResourceGroupTypeEnum {
+	// All reuqest
+	DEFAULT,
 
-	GLOBAL, // default group, global request is routing to default group
-	CUBE, //
-	ASYNC;
+	// No project request
+	GLOBAL,
 
-	KylinResourceGroupTypeEnum() {
+	// All request in a project
+	QUERY,
 
-	}
+	// No request
+	BUILD,
+
+	VIP,
 
 }

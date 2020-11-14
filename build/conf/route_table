@@ -1,4 +1,17 @@
-{"id":4, "backends":["10.1.2.56:7070"], "project":"p1", "resourceGroup":"common_query_1", "type":"ASYNC"}
-{"id":5, "backends":["10.1.2.56:7070"], "project":"p1", "resourceGroup":"common_query_2", "type":"CUBE"}
-{"id":6, "backends":["10.1.2.56:7070"], "project":"p2", "resourceGroup":"common_query_3", "order": 10 , "type":"CUBE"}
-{"id":1, "backends":["10.1.2.56:7070"], "resourceGroup":"default", "type":"GLOBAL"}
+
+{"cluster": "c1", "backends":["10.1.2.56:7070"], "project":"p1", "resourceGroup":"1", "type":"BUILD"}
+{"cluster": "c1", "backends":["10.1.2.56:7070"], "project":"p1", "resourceGroup":"1", "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.56:7070"], "project":"p2", "resourceGroup":"1", "order": 10 , "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.56:7070"], "project":"p3", "resourceGroup":"1", "order": 10 , "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.152:7071"], "project":"p3", "resourceGroup":"2", "order": 10 , "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.56:7070"], "project":"p4", "resourceGroup":"1", "order": 10 , "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.153:7071"], "project":"p5", "resourceGroup":"3", "order": 10 , "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.153:7071"], "project":"p6", "resourceGroup":"3", "order": 10 , "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.153:7071"], "project":"p7", "resourceGroup":"3", "order": 10 , "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.153:7071"], "project":"p8", "resourceGroup":"3", "order": 10 , "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.153:7071"], "project":"p9", "resourceGroup":"3", "order": 10 , "type":"QUERY"}
+{"cluster": "c1", "backends":["10.1.2.153:7071"], "project":"p10", "resourceGroup":"3", "order": 10 , "type":"QUERY"}
+
+
+{"cluster": "c1", "backends":["10.1.2.56:7070"], "resourceGroup":"0", "type":"DEFAULT"}
+

@@ -18,6 +18,7 @@ package org.springframework.cloud.gateway.handler;
 
 import java.util.function.Function;
 
+import org.springframework.cloud.gateway.support.msg.MsgPicker;
 import reactor.core.publisher.Mono;
 
 import org.springframework.cloud.gateway.config.GlobalCorsProperties;
@@ -83,6 +84,7 @@ public class RoutePredicateHandlerMapping extends AbstractHandlerMapping {
 			return Mono.empty();
 		}
 		exchange.getAttributes().put(GATEWAY_HANDLER_MAPPER_ATTR, getSimpleName());
+		MsgPicker.setMsg(exchange);
 
 		return lookupRoute(exchange)
 				// .log("route-predicate-handler-mapping", Level.FINER) //name this

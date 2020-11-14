@@ -15,4 +15,6 @@ public class KylinJdbcDataSource {
 
 	private String tableName;
 
+	private String clusterId;
+
 }

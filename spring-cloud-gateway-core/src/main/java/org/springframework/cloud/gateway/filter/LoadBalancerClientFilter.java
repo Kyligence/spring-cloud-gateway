@@ -22,8 +22,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.netflix.loadbalancer.BaseLoadBalancer;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.cloud.gateway.support.msg.MsgPicker;
 import reactor.core.publisher.Mono;
 
 import org.springframework.cloud.client.ServiceInstance;
@@ -36,12 +38,13 @@ import org.springframework.web.server.ServerWebExchange;
 
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_SCHEME_PREFIX_ATTR;
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.PROJECT_KEY;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.addOriginalRequestUrl;
 
 /**
- * @deprecated in favour of {@link ReactiveLoadBalancerClientFilter}
  * @author Spencer Gibb
  * @author Tim Ysewyn
+ * @deprecated in favour of {@link ReactiveLoadBalancerClientFilter}
  */
 @Deprecated
 public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
@@ -58,7 +61,7 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 	protected LoadBalancerProperties properties;
 
 	public LoadBalancerClientFilter(LoadBalancerClient loadBalancer,
-			LoadBalancerProperties properties) {
+									LoadBalancerProperties properties) {
 		this.loadBalancer = loadBalancer;
 		this.properties = properties;
 	}
@@ -87,8 +90,11 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 		final ServiceInstance instance = choose(exchange);
 
 		if (instance == null) {
-			throw NotFoundException.create(properties.isUse404(),
-					"Unable to find instance for " + url.getHost());
+			if (StringUtils.isBlank(exchange.getAttribute(PROJECT_KEY))) {
+				throw NotFoundException.create(properties.isUse404(), MsgPicker.getMsg().getNoInstance());
+			} else {
+				throw NotFoundException.create(properties.isUse404(), MsgPicker.getMsg().getProjectNoInstance(exchange.getAttribute(PROJECT_KEY)));
+			}
 		}
 
 		URI uri = exchange.getRequest().getURI();

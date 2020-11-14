@@ -17,14 +17,15 @@ public class RouteDO {
 
 	private long id;
 
+	private int order = 0;
+
+	private String cluster;
+
 	private List<String> backends;
 
 	private String project;
 
-	private String resourceGroup;
-
 	private String type;
 
-	private int order = 0;
-
+	private String resourceGroup;
 }

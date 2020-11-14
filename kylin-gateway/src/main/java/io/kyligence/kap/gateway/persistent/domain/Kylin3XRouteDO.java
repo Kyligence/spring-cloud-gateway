@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class KylinRouteDO {
+public class Kylin3XRouteDO {
 
 	private long id;
 

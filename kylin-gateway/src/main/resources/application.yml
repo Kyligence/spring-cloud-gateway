@@ -6,7 +6,7 @@ spring:
   cloud:
     gateway:
       loadbalancer:
-        use404: true
+        use404: false
         queryRouteDefault: ${kylin.gateway.route.query-route-default}
       httpclient:
         connectTimeout: 15000
@@ -39,8 +39,9 @@ kylin:
     route:
       refresh-cron: 0/3 * * * * *
       query-route-default: true
+      refresh-interval: 3s
     ke:
-      version: 3x
+      version: 4x
     health:
       check-url: /kylin/api/health
       rest-template:
@@ -48,7 +49,7 @@ kylin:
         read-timeout: 5000
       ping-strategy:
         retry-times: 3
-        interval-seconds: 5
+        interval-seconds: 10
     datasource:
       type: file
       route-table-file-path: ${gateway.home}/conf/route_table
@@ -58,6 +59,6 @@ kylin:
       password: passw0rd
       table-name: km_route_table
 
-management.endpoints.web.exposure.include: health, kylin-gateway
+management.endpoints.web.exposure.include: health, gateway
 
 server.port: 7777

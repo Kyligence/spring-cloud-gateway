@@ -17,4 +17,6 @@ public class KylinRouteConstant {
 	public static final String QUERY_SUFFIX = "/api/query";
 
 	public static final String DEFAULT_RESOURCE_GROUP = "default";
+
+	public static final String GLOBAL_RESOURCE_GROUP = "global";
 }
