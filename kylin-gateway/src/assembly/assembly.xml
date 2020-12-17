@@ -51,10 +51,5 @@
 			<outputDirectory>.</outputDirectory>
 			<fileMode>0644</fileMode>
 		</file>
-		<file>
-			<source>../VERSION</source>
-			<outputDirectory>.</outputDirectory>
-			<fileMode>0644</fileMode>
-		</file>
 	</files>
 </assembly>

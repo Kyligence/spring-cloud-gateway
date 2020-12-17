@@ -22,5 +22,3 @@ _site/
 .flattened-pom.xml
 .sdkmanrc
 dist
-VERSION
-commit_SHA1
