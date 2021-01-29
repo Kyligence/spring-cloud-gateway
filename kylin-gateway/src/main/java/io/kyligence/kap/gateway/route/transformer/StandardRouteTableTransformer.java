@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static io.kyligence.kap.gateway.constant.KylinResourceGroupTypeEnum.GLOBAL;
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.DEFAULT_RESOURCE_GROUP;
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.GLOBAL_RESOURCE_GROUP;
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.KYLIN_GLOBAL_ROUTE_PREDICATE;
@@ -82,10 +81,9 @@ public class StandardRouteTableTransformer implements RouteTableTransformer {
 
 		String uuid = String.valueOf(rawRoute.getId());
 		routeDefinition.setId(uuid);
-
-		PredicateDefinition predicateDefinition = new PredicateDefinition();
 		routeDefinition.setUri(new URI(getStringURIByServiceId(getServiceId(rawRoute))));
 
+		PredicateDefinition predicateDefinition = new PredicateDefinition();
 		routeDefinition.setPredicates(Lists.newArrayList(predicateDefinition));
 
 		KylinResourceGroupTypeEnum resourceGroupTypeEnum = KylinResourceGroupTypeEnum.valueOf(rawRoute.getType());

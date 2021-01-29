@@ -126,6 +126,10 @@ public class KylinGlobalRoutePredicateFactory extends AbstractRoutePredicateFact
 					return Mono.just(true);
 				}
 
+				if (exchange.getRequest().getMethod() == HttpMethod.GET) {
+					return Mono.just(true);
+				}
+
 				String headerProject = getProjectFromProjectList(exchange.getRequest().getHeaders().get(PROJECT_KEY));
 				if (Objects.nonNull(headerProject)) {
 					return setProjectNoResourceGroupException(exchange, headerProject);
@@ -141,15 +145,12 @@ public class KylinGlobalRoutePredicateFactory extends AbstractRoutePredicateFact
 					return setProjectNoResourceGroupException(exchange, pathProject);
 				}
 
-				if (exchange.getRequest().getMethod() == HttpMethod.GET) {
-					return Mono.just(true);
-				}
-
 				exchange.getAttributes().put(READ_REQUEST_BODY_OBJECT_KEY, "true");
 				return ServerWebExchangeUtils.cacheRequestBodyAndRequest(exchange,
 						serverHttpRequest -> ServerRequest
 								.create(exchange.mutate().request(serverHttpRequest).build(), messageReaders)
 								.bodyToMono(inClass)
+								.switchIfEmpty(Mono.just(true))
 								.map(objectValue -> {
 									String project = readProjectFromCacheBody(objectValue);
 									if (Objects.nonNull(project)) {

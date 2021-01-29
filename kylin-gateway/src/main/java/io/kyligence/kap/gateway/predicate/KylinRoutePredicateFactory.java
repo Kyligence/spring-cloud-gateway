@@ -147,6 +147,10 @@ public class KylinRoutePredicateFactory
 
 				exchange.getAttributes().put(PROJECT_FLAG, "");
 
+				if (exchange.getRequest().getMethod() == HttpMethod.GET) {
+					return Mono.just(false);
+				}
+
 				List<String> headerProjects = exchange.getRequest().getHeaders().get(PROJECT_KEY);
 				if (CollectionUtils.isNotEmpty(headerProjects)) {
 					return Mono.just(testProjectsAndMark(exchange, config, headerProjects));
@@ -160,10 +164,6 @@ public class KylinRoutePredicateFactory
 				String pathProject = UrlProjectUtil.extractProjectFromUrlPath(exchange);
 				if (StringUtils.isNotBlank(pathProject)) {
 					return Mono.just(testProjectsAndMark(exchange, config, pathProject));
-				}
-
-				if (exchange.getRequest().getMethod() == HttpMethod.GET) {
-					return Mono.just(false);
 				}
 
 				if (Boolean.valueOf(exchange.getAttribute(READ_REQUEST_BODY_OBJECT_KEY))) {
