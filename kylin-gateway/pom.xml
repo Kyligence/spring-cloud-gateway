@@ -18,7 +18,7 @@
 	</parent>
 
 	<properties>
-		<lombok.version>1.18.2</lombok.version>
+		<lombok.version>1.18.20</lombok.version>
 		<guava.version>19.0</guava.version>
 		<commons-collections.version>3.2.2</commons-collections.version>
 		<maven.build.timestamp.format>yyyy_MM_dd_HH_mm</maven.build.timestamp.format>
