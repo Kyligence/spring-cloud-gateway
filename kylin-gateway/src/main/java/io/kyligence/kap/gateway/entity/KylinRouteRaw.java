@@ -3,7 +3,8 @@ package io.kyligence.kap.gateway.entity;
 import com.google.common.base.Preconditions;
 import com.netflix.loadbalancer.Server;
 import io.kyligence.kap.gateway.persistent.domain.Kylin3XRouteDO;
-import io.kyligence.kap.gateway.persistent.domain.KylinRouteTableDO;
+import io.kyligence.kap.gateway.persistent.domain.KylinRouteDO;
+import io.kyligence.kap.gateway.persistent.domain.MdxRouteDO;
 import io.kyligence.kap.gateway.persistent.domain.RouteDO;
 import io.kyligence.kap.gateway.utils.JsonUtil;
 import lombok.Data;
@@ -20,25 +21,36 @@ public class KylinRouteRaw {
 
 	private long id;
 
-	private List<Server> backends;
-
-	private String project;
-
-	private String resourceGroup;
+	private int order = 0;
 
 	private String type;
 
-	private int order = 0;
+	private String host;
+
+	private String strategy;
+
+	private String project;
 
 	private String cluster;
 
-	private String host;
+	private String resourceGroup;
 
-	public KylinRouteRaw(String type, String host, List<Server> backends) {
-		this.backends = backends;
-		this.type = type;
-		this.host = host;
+	private List<Server> backends;
 
+	public static KylinRouteRaw convert(MdxRouteDO mdxRouteDO) {
+		if (null == mdxRouteDO) {
+			log.error("Failed to convert MdxRouteDO to KylinRouteRaw, cause by MdxRouteDO is null!");
+			return null;
+		}
+
+		KylinRouteRaw kylinRouteRaw = new KylinRouteRaw();
+
+		kylinRouteRaw.type = mdxRouteDO.getType();
+		kylinRouteRaw.host = mdxRouteDO.getHost();
+		kylinRouteRaw.strategy = mdxRouteDO.getStrategy();
+		kylinRouteRaw.backends = mdxRouteDO.getBackends();
+
+		return kylinRouteRaw;
 	}
 
 	public static KylinRouteRaw convert(Kylin3XRouteDO kylin3XRouteDO) {
@@ -50,9 +62,7 @@ public class KylinRouteRaw {
 		KylinRouteRaw kylinRouteRaw = new KylinRouteRaw();
 
 		kylinRouteRaw.id = kylin3XRouteDO.getId();
-
 		kylinRouteRaw.cluster = kylin3XRouteDO.getCluster();
-
 		kylinRouteRaw.project = kylin3XRouteDO.getProject();
 		kylinRouteRaw.type = kylin3XRouteDO.getType();
 
@@ -60,11 +70,8 @@ public class KylinRouteRaw {
 
 		try {
 			Preconditions.checkNotNull(kylin3XRouteDO.getBackends(), "Route backends is null !");
-
 			List<String> instances = JsonUtil.toObject(kylin3XRouteDO.getBackends(), List.class);
-
 			Preconditions.checkNotNull(instances);
-
 			kylinRouteRaw.backends = instances.stream().map(Server::new).collect(Collectors.toList());
 		} catch (Exception e) {
 			log.error("Failed to read backends.", e);
@@ -73,7 +80,7 @@ public class KylinRouteRaw {
 		return kylinRouteRaw;
 	}
 
-	public static KylinRouteRaw convert(KylinRouteTableDO.KylinRouteDO kylinRouteDO) {
+	public static KylinRouteRaw convert(KylinRouteDO kylinRouteDO) {
 		if (null == kylinRouteDO) {
 			log.error("Failed to convert KylinRouteDO to KylinRouteRaw, cause by kylinRouteDO is null!");
 			return null;

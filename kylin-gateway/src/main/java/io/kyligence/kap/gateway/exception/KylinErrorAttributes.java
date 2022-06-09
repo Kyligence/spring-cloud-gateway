@@ -23,7 +23,7 @@ public class KylinErrorAttributes extends DefaultErrorAttributes {
 	private void failCode(Map<String, Object> msg) {
 		if (msg != null) {
 			String message = (String) msg.get("message");
-			if ( message != null) {
+			if (message != null) {
 				if (!MessageUtils.isFormatError(message)) {
 					if (msg.get("status") != null && msg.get("status").equals(500)) {
 						msg.put("stacktrace", message);

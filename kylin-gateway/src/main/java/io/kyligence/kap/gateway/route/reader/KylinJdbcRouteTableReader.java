@@ -27,16 +27,16 @@ public class KylinJdbcRouteTableReader implements IRouteTableReader {
 			+ String.join(",", ID, CLUSTER_ID, SERVICE, ROUTE_TABLE)
 			+ " from %s WHERE " + SERVICE + "='GATEWAY' and " + CLUSTER_ID + " ='%s' ";
 
-	private JdbcTemplate jdbcTemplate;
+	private final JdbcTemplate jdbcTemplate;
 
-	private String table;
+	private final String table;
 
-	private String clusterId;
+	private final String clusterId;
 
 	public KylinJdbcRouteTableReader(JdbcTemplate jdbcTemplate, String table, String clusterId) {
 		this.jdbcTemplate = jdbcTemplate;
 		this.table = table;
-		this.clusterId = StringUtils.replace(clusterId, "\'", "");
+		this.clusterId = StringUtils.replace(clusterId, "'", "");
 	}
 
 	@Override

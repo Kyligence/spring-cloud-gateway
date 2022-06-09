@@ -2,6 +2,8 @@ package io.kyligence.kap.gateway.config;
 
 import io.kyligence.kap.gateway.constant.KylinGatewayVersion;
 import io.kyligence.kap.gateway.filter.MdxLoadBalancerClientFilter;
+import io.kyligence.kap.gateway.manager.MdxLoadManager;
+import io.kyligence.kap.gateway.manager.ServiceManager;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,7 +30,10 @@ public class MdxGatewayLoadBalancerClientAutoConfiguration {
 	@ConditionalOnMissingBean({LoadBalancerClientFilter.class,
 			ReactiveLoadBalancerClientFilter.class})
 	public LoadBalancerClientFilter loadBalancerClientFilter(LoadBalancerClient client,
-															 LoadBalancerProperties properties) {
-		return new MdxLoadBalancerClientFilter(client, properties);
+															 LoadBalancerProperties properties,
+															 ServiceManager serviceManager,
+															 MdxLoadManager mdxLoadManager) {
+		return new MdxLoadBalancerClientFilter(client, properties, serviceManager, mdxLoadManager);
 	}
+
 }

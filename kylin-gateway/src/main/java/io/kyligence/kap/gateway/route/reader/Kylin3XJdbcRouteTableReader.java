@@ -29,13 +29,13 @@ public class Kylin3XJdbcRouteTableReader implements IRouteTableReader {
 			+ String.join(",", ID, BACKENDS, PROJECT, RESOURCE_GROUP, TYPE, CLUSTER)
 			+ " from %s";
 
-	private JdbcTemplate jdbcTemplate;
+	private final JdbcTemplate jdbcTemplate;
 
-	private String table;
+	private final String table;
 
 	public Kylin3XJdbcRouteTableReader(JdbcTemplate jdbcTemplate, String table) {
 		this.jdbcTemplate = jdbcTemplate;
-		this.table = StringUtils.replace(table, "\'", "");
+		this.table = StringUtils.replace(table, "'", "");
 	}
 
 	@Override

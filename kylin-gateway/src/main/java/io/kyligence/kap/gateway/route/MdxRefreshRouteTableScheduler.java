@@ -6,7 +6,6 @@ import io.kyligence.kap.gateway.constant.KylinGatewayVersion;
 import io.kyligence.kap.gateway.entity.KylinRouteRaw;
 import io.kyligence.kap.gateway.entity.KylinRouteTable;
 import io.kyligence.kap.gateway.event.KylinRefreshRoutesEvent;
-import io.kyligence.kap.gateway.filter.MdxLoadBalancerClientFilter;
 import io.kyligence.kap.gateway.route.reader.IRouteTableReader;
 import io.kyligence.kap.gateway.route.transformer.RouteTableTransformer;
 import io.micrometer.core.instrument.util.NamedThreadFactory;
@@ -36,13 +35,10 @@ public class MdxRefreshRouteTableScheduler implements ApplicationEventPublisherA
 
 	protected ApplicationEventPublisher publisher;
 
-	private AbstractGatewayControllerEndpoint gatewayControllerEndpoint;
-
-	private LoadBalancerClientFilter loadBalancerClientFilter;
-
-	private IRouteTableReader routeTableReader;
-
 	private final ScheduledExecutorService routeRefresher;
+	private final AbstractGatewayControllerEndpoint gatewayControllerEndpoint;
+	private final LoadBalancerClientFilter loadBalancerClientFilter;
+	private final IRouteTableReader routeTableReader;
 
 	@Autowired
 	private GlobalConfig globalConfig;
@@ -73,8 +69,8 @@ public class MdxRefreshRouteTableScheduler implements ApplicationEventPublisherA
 
 	private synchronized void run() {
 		try {
-			List<KylinRouteRaw> rawRouteTable = routeTableReader.list();
-			KylinRouteTable routeTable = routeTableTransformer.convert(rawRouteTable);
+			List<KylinRouteRaw> kylinRouteRawList = routeTableReader.list();
+			KylinRouteTable routeTable = routeTableTransformer.convert(kylinRouteRawList);
 			if (routeTable.isBroken()) {
 				logger.error("Failed to convert rawRouteTable to kylinRouteTable!");
 				return;
@@ -96,7 +92,7 @@ public class MdxRefreshRouteTableScheduler implements ApplicationEventPublisherA
 					routeTable.getLoadBalancerList(), globalConfig.getLastValidRawRouteTableMvcc().get());
 
 			globalConfig.getLastValidRawRouteTableMvcc().incrementAndGet();
-			globalConfig.setLastValidRawRouteTable(rawRouteTable);
+			globalConfig.setLastValidRawRouteTable(kylinRouteRawList);
 		} catch (Exception e) {
 			logger.error("Failed to get route table from {}!", routeTableReader.getClass(), e);
 		}

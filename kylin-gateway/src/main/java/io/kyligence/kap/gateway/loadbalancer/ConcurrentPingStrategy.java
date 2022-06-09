@@ -1,4 +1,4 @@
-package io.kyligence.kap.gateway.health;
+package io.kyligence.kap.gateway.loadbalancer;
 
 import com.google.common.collect.Lists;
 import com.netflix.loadbalancer.IPing;
@@ -36,12 +36,9 @@ import java.util.stream.Collectors;
 @Data
 public class ConcurrentPingStrategy implements IPingStrategy, ApplicationListener<KylinRefreshRoutesEvent> {
 
-	private Map<Server, AtomicInteger> serversStatus = new ConcurrentHashMap<>();
-
-	private ExecutorService executorService = Executors.newCachedThreadPool();
-
 	private final ScheduledExecutorService pingRefresher;
-
+	private Map<Server, AtomicInteger> serversStatus = new ConcurrentHashMap<>();
+	private ExecutorService executorService = Executors.newCachedThreadPool();
 	private int retryTimes;
 
 	private int intervalSeconds;
@@ -137,9 +134,9 @@ public class ConcurrentPingStrategy implements IPingStrategy, ApplicationListene
 
 	private class CheckServerTask implements Callable<Boolean> {
 
-		private IPing ping;
+		private final IPing ping;
 
-		private Server server;
+		private final Server server;
 
 		private CheckServerTask(IPing ping, Server server) {
 			this.ping = ping;

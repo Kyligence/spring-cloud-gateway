@@ -34,17 +34,11 @@ import java.util.stream.Collectors;
 public class KylinRefreshRouteTableScheduler implements ApplicationEventPublisherAware {
 
 	private static final Logger logger = LoggerFactory.getLogger(KylinRefreshRouteTableScheduler.class);
-
-	protected ApplicationEventPublisher publisher;
-
-	private AbstractGatewayControllerEndpoint gatewayControllerEndpoint;
-
-	private LoadBalancerClientFilter loadBalancerClientFilter;
-
-	private IRouteTableReader routeTableReader;
-
 	private final ScheduledExecutorService routeRefresher;
-
+	protected ApplicationEventPublisher publisher;
+	private final AbstractGatewayControllerEndpoint gatewayControllerEndpoint;
+	private final LoadBalancerClientFilter loadBalancerClientFilter;
+	private final IRouteTableReader routeTableReader;
 	@Autowired
 	private GlobalConfig globalConfig;
 

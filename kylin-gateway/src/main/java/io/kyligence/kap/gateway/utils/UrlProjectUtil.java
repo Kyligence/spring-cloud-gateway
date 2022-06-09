@@ -11,7 +11,7 @@ public class UrlProjectUtil {
 
 	public static final String URL_MODELS_PREFIX = "/kylin/api/models";
 
-	private static final Pattern[] URL_PROJECT_PATTERNS = new Pattern[] {
+	private static final Pattern[] URL_PROJECT_PATTERNS = new Pattern[]{
 			Pattern.compile("^/kylin/api/projects/([^/]+)/(backup|default_database" +
 					"|query_accelerate_threshold|storage" +
 					"|storage_quota|shard_num_config" +

@@ -12,5 +12,5 @@ public class HttpRouteTableReader implements IRouteTableReader {
 	public List<KylinRouteRaw> list() {
 		return Lists.newArrayList();
 	}
-	
+
 }

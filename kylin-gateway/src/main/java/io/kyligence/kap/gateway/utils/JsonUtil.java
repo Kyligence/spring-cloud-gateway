@@ -47,12 +47,12 @@ public class JsonUtil {
 		return object;
 	}
 
-	public static <T> T toObject(String str, TypeReference<T> typeReference){
-		if(StringUtils.isEmpty(str) || typeReference == null){
+	public static <T> T toObject(String str, TypeReference<T> typeReference) {
+		if (StringUtils.isEmpty(str) || typeReference == null) {
 			return null;
 		}
 		try {
-			return (T)(typeReference.getType().equals(String.class)? str : mapper.readValue(str, typeReference));
+			return (T) (typeReference.getType().equals(String.class) ? str : mapper.readValue(str, typeReference));
 		} catch (Exception e) {
 			log.warn("Parse String to Object error", e);
 			return null;

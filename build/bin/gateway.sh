@@ -29,6 +29,7 @@ GATEWAY_HOME=`dirname ${CURRENT_HOME}`
 gateway_properties="${GATEWAY_HOME}/conf/application.yml"
 GATEWAY_PORT=$(sed '/^server.port:/!d;s/.*://' "${gateway_properties}")
 GATEWAY_PORT=$(eval echo "$GATEWAY_PORT")
+
 function quit {
     echo "$@"
     exit 1
@@ -95,7 +96,7 @@ function stop_gateway() {
     fi
 }
 
-function reload () {
+function reload() {
     result=$(curl -s -X GET --header 'Accept: application/json' http://127.0.0.1:"${GATEWAY_PORT}"/api/gateway/admin/reload)
     if [[ "${result}" =~ "success" ]]; then
          echo "Upgrade config success..."
@@ -116,5 +117,5 @@ elif [[ "$1" == "reload" ]]; then
     echo `date '+%Y-%m-%d %H:%M:%S '`"Reload Gateway config..."
     reload
 else
-    quit "Usage: 'gateway.sh start' or 'gateway.sh stop' or 'gateway.sh restart'"
+    quit "Usage: start|stop|restart|reload"
 fi

@@ -1,7 +1,7 @@
 package io.kyligence.kap.gateway.constant;
 
 public enum KylinResourceGroupTypeEnum {
-	// All reuqest
+	// All request
 	DEFAULT,
 
 	// No project request

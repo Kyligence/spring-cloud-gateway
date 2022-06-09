@@ -10,11 +10,10 @@ import io.kyligence.kap.gateway.config.GlobalConfig;
 import io.kyligence.kap.gateway.constant.KylinGatewayVersion;
 import io.kyligence.kap.gateway.entity.KylinRouteRaw;
 import io.kyligence.kap.gateway.entity.KylinRouteTable;
-import io.kyligence.kap.gateway.filter.MdxLoadBalancer;
-import io.kyligence.kap.gateway.health.MdxPing;
+import io.kyligence.kap.gateway.loadbalancer.MdxLoadBalancer;
+import io.kyligence.kap.gateway.loadbalancer.MdxPing;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
@@ -25,9 +24,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-import static io.kyligence.kap.gateway.constant.KylinRouteConstant.*;
+import static io.kyligence.kap.gateway.constant.KylinRouteConstant.KYLIN_GLOBAL_ROUTE_PREDICATE;
+import static io.kyligence.kap.gateway.constant.KylinRouteConstant.PREDICATE_ARG_KEY_0;
 
 @Slf4j
 @ConditionalOnProperty(name = "server.type", havingValue = KylinGatewayVersion.MDX)
@@ -65,8 +64,8 @@ public class MdxRouteTableTransformer implements RouteTableTransformer {
 	public MdxLoadBalancer convert2KylinLoadBalancer(KylinRouteRaw routeRaw) {
 		MdxLoadBalancer mdxLoadBalancer =
 				new MdxLoadBalancer(routeRaw.getHost(), ping, new RoundRobinRule(), pingStrategy, globalConfig.getLastValidRawRouteTableMvcc().get());
-
-				mdxLoadBalancer.addServers(routeRaw.getBackends());
+		mdxLoadBalancer.setStrategy(routeRaw.getStrategy());
+		mdxLoadBalancer.addServers(routeRaw.getBackends());
 		return mdxLoadBalancer;
 	}
 
@@ -89,7 +88,7 @@ public class MdxRouteTableTransformer implements RouteTableTransformer {
 				String serviceId = rawRoute.getHost();
 				if (loadBalancerMap.containsKey(serviceId)) {
 					if (!CollectionUtils.isEqualCollection(loadBalancerMap.get(serviceId).getAllServers(), rawRoute.getBackends())) {
-						throw new RuntimeException("Same resource group, difference server list !");
+						throw new RuntimeException("Same resource group, make difference server list !");
 					}
 
 					loadBalancer = (MdxLoadBalancer) loadBalancerMap.get(serviceId);

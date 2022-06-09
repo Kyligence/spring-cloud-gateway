@@ -17,9 +17,9 @@ import java.util.List;
 public class FileRouteTableReader implements IRouteTableReader {
 
 	//TODO Save inMemory route table to file .
-	private String routeTableFile;
+	private final String routeTableFile;
 
-	private ObjectMapper routeDOMapper = new ObjectMapper();
+	private final ObjectMapper routeDOMapper = new ObjectMapper();
 
 	public FileRouteTableReader(FileDataSource fileDataSource) {
 		this.routeTableFile = fileDataSource.getRouteTableFilePath();

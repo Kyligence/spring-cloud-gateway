@@ -16,11 +16,9 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class KylinRouteTable {
 
-	private boolean broken = false;
-
-	private long mvcc = -1;
-
 	private final List<Route> routes = Lists.newArrayList();
+	private boolean broken = false;
+	private long mvcc = -1;
 
 	public void addRoute(Route route) {
 		routes.add(route);

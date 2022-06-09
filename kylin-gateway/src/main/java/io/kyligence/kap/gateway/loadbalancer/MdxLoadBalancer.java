@@ -1,25 +1,27 @@
-package io.kyligence.kap.gateway.filter;
+package io.kyligence.kap.gateway.loadbalancer;
 
-import com.netflix.loadbalancer.*;
-import io.kyligence.kap.gateway.health.ConcurrentPingStrategy;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.IPing;
+import com.netflix.loadbalancer.IPingStrategy;
+import com.netflix.loadbalancer.IRule;
+import com.netflix.loadbalancer.LoadBalancerStats;
+import io.kyligence.kap.gateway.loadbalancer.ConcurrentPingStrategy;
 
 public class MdxLoadBalancer extends BaseLoadBalancer {
+
+	private static final int DEFAULT_INTERVAL_SECONDS = 1;
 
 	private long mvcc = 0;
 
 	private boolean broken = false;
 
-	private static final int DEFAULT_INTERVAL_SECONDS = 1;
+	private String strategy;
 
 	public MdxLoadBalancer(String name, IPing ping, IRule rule, IPingStrategy pingStrategy, long mvcc) {
 		super(name, rule, new LoadBalancerStats(name), null, pingStrategy);
 		if (pingStrategy instanceof ConcurrentPingStrategy) {
 			setPingInterval(DEFAULT_INTERVAL_SECONDS);
 		}
-
 		setPing(ping);
 		this.mvcc = mvcc;
 	}
@@ -33,17 +35,24 @@ public class MdxLoadBalancer extends BaseLoadBalancer {
 		return getName();
 	}
 
-
 	public long getMvcc() {
 		return mvcc;
+	}
+
+	public boolean isBroken() {
+		return broken;
 	}
 
 	public void setBroken(boolean broken) {
 		this.broken = broken;
 	}
 
-	public boolean isBroken() {
-		return broken;
+	public String getStrategy() {
+		return strategy;
+	}
+
+	public void setStrategy(String strategy) {
+		this.strategy = strategy;
 	}
 
 	@Override

@@ -26,7 +26,7 @@ public class ResourceGroupTypeAggRouteTableFilter implements RouteTableFilter {
 	@Override
 	public List<String> getErrorMessage() {
 		return Lists.newArrayList(String.format("Illegal: can not use resource group types %s together!",
-				Arrays.toString(new KylinResourceGroupTypeEnum[]{KylinResourceGroupTypeEnum.DEFAULT, KylinResourceGroupTypeEnum.GLOBAL})),
+						Arrays.toString(new KylinResourceGroupTypeEnum[]{KylinResourceGroupTypeEnum.DEFAULT, KylinResourceGroupTypeEnum.GLOBAL})),
 				ROUTE_ILLEGAL_MESSAGE);
 	}
 }

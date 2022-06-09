@@ -4,6 +4,7 @@ import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 import io.kyligence.kap.gateway.exception.ForbiddenException;
+import io.kyligence.kap.gateway.loadbalancer.KylinLoadBalancer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.cloud.client.ServiceInstance;

@@ -11,7 +11,7 @@ import java.util.Set;
 public class KylinRefreshRoutesEvent extends RefreshRoutesEvent {
 
 	@Getter
-	private Set<Server> serverSet;
+	private final Set<Server> serverSet;
 
 	/**
 	 * Create a new ApplicationEvent.

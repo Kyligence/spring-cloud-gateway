@@ -3,6 +3,7 @@ package io.kyligence.kap.gateway.filter;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
+import io.kyligence.kap.gateway.loadbalancer.KylinLoadBalancer;
 import io.kyligence.kap.gateway.utils.AsyncQueryUtil;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;

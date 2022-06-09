@@ -47,8 +47,6 @@ public class MdxAuthenticationUtils {
 
 	private static final String HEADER_NAME_GATEWAY = "GatewayAuth";
 
-	private static final String CURRENT_USER = "currentUser";
-
 	private static final String EXECUTE_AS_USER_ID = "EXECUTE_AS_USER_ID";
 
 	private static final String USERNAME = "username";
@@ -57,7 +55,7 @@ public class MdxAuthenticationUtils {
 
 	private static final int SALT_LENGTH = 5;
 
-	MdxAuthenticationUtils() {
+	private MdxAuthenticationUtils() {
 	}
 
 	public static String getProjectContext(String contextPath) {
@@ -93,36 +91,29 @@ public class MdxAuthenticationUtils {
 	}
 
 	public static String getUsername(ServerHttpRequest request) {
-
 		String username;
-		HttpHeaders headers = request.getHeaders();
 
 		// Delegate user, get user from 'EXECUTE_AS_USER_ID' parameter
-		username = getUserFromParameter(headers, EXECUTE_AS_USER_ID);
-		if (StringUtils.isNotBlank(username)) {
-			return username;
-		}
-
-		// Get user from 'currentUser' parameter
-		username = getUserFromParameter(headers, CURRENT_USER);
+		username = request.getQueryParams().getFirst(EXECUTE_AS_USER_ID);
 		if (StringUtils.isNotBlank(username)) {
 			return username;
 		}
 
 		// Get user from 'username' parameter
-		username = getUserFromParameter(headers, USERNAME);
+		username = request.getQueryParams().getFirst(USERNAME);
 		if (StringUtils.isNotBlank(username)) {
 			return username;
 		}
 
-		// Get user from 'authorization' parameter
+		HttpHeaders headers = request.getHeaders();
+		// Get username from 'authorization' header
 		List<String> authList = headers.get(AUTHORIZATION);
 		if (authList != null) {
 			username = parseAuthInfo(authList.get(0));
 			return username;
 		}
 
-		// Get user from cookie
+		// Get username from cookie
 		HttpCookie mdxAuthCookie = getSessionAuthCookie(request);
 		if (mdxAuthCookie != null) {
 			String cookieValue = mdxAuthCookie.getValue();
@@ -132,7 +123,7 @@ public class MdxAuthenticationUtils {
 			return username;
 		}
 
-		// Get User from 'GatewayAuth' parameter
+		// Get username from 'GatewayAuth' header
 		List<String> gatewayAuthList = headers.get(HEADER_NAME_GATEWAY);
 		if (gatewayAuthList != null && gatewayAuthList.get(0) != null) {
 			return parseAuthInfo(gatewayAuthList.get(0));

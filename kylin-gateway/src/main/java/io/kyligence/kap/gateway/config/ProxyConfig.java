@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UpdateConfig {
+public class ProxyConfig {
 
 	private Proxy mdx;
 

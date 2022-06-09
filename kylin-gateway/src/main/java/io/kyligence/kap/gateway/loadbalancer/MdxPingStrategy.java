@@ -1,4 +1,4 @@
-package io.kyligence.kap.gateway.health;
+package io.kyligence.kap.gateway.loadbalancer;
 
 import com.google.common.collect.Lists;
 import com.netflix.loadbalancer.IPing;
@@ -6,6 +6,8 @@ import com.netflix.loadbalancer.IPingStrategy;
 import com.netflix.loadbalancer.Server;
 import io.kyligence.kap.gateway.config.MdxConfig;
 import io.kyligence.kap.gateway.event.KylinRefreshRoutesEvent;
+import io.kyligence.kap.gateway.manager.MdxLoadManager;
+import io.kyligence.kap.gateway.manager.task.GenerateSchemaTask;
 import io.micrometer.core.instrument.util.NamedThreadFactory;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -15,27 +17,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
-import static io.kyligence.kap.gateway.health.MdxLoad.*;
 
 
 /**
  * @author liang.xu
  */
-
 @Slf4j
 @Data
 public class MdxPingStrategy implements IPingStrategy, ApplicationListener<KylinRefreshRoutesEvent> {
 
-	private Map<Server, AtomicInteger> serversStatus = new ConcurrentHashMap<>();
-
-	private ExecutorService executorService = Executors.newCachedThreadPool();
-
 	private final ScheduledExecutorService pingRefresher;
+	private Map<Server, AtomicInteger> serversStatus = new ConcurrentHashMap<>();
+	private ExecutorService executorService = Executors.newCachedThreadPool();
 
 	private int retryTimes;
 
@@ -48,11 +55,12 @@ public class MdxPingStrategy implements IPingStrategy, ApplicationListener<Kylin
 	@Autowired
 	private MdxConfig mdxConfig;
 
+	@Autowired
+	private MdxLoadManager mdxLoadManager;
+
 	public MdxPingStrategy(IPing ping) {
 		this.ping = ping;
-
 		this.pingRefresher = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("PingRefresher"));
-
 	}
 
 	@PostConstruct
@@ -61,58 +69,15 @@ public class MdxPingStrategy implements IPingStrategy, ApplicationListener<Kylin
 		pingRefresher.scheduleWithFixedDelay(this::pingServers, 10, intervalSeconds > 0 ? intervalSeconds : 3, TimeUnit.SECONDS);
 	}
 
-	private void pingServers() {
-		try {
-			pingServers(Lists.newArrayList(serversStatus.keySet()));
-		} catch (Exception e) {
-			log.error("Failed to run cron ping servers", e);
-		}
-	}
-
-	public synchronized boolean[] pingServers(List<Server> servers) {
-		if (CollectionUtils.isEmpty(servers)) {
-			return new boolean[]{false};
-		}
-
-		boolean[] results = new boolean[servers.size()];
-
-		Future[] futures = new Future[servers.size()];
-
-		for (int i = 0; i < servers.size(); i++) {
-			futures[i] = executorService.submit(new CheckServerTask(this.ping, servers.get(i)));
-		}
-
-		for (int i = 0; i < servers.size(); i++) {
-			try {
-				results[i] = (Boolean) futures[i].get();
-			} catch (Exception e) {
-				log.error("Task execute failed, server: {}", servers.get(i));
+	@Override
+	public synchronized void onApplicationEvent(KylinRefreshRoutesEvent event) {
+		for (Server server : serversStatus.keySet()) {
+			if (serversStatus.get(server).get() > retryTimes) {
+				mdxLoadManager.removeServer(server.getId());
 			}
 		}
-
-		return results;
-	}
-
-	private void generateSchema() {
-		try {
-			List<String> serverList = new LinkedList<>();
-			for (MdxConfig.ProxyInfo proxyInfo : mdxConfig.getProxy()) {
-				serverList.addAll(proxyInfo.getServers());
-			}
-			List<Server> serverList1 = serverList.stream().map(s -> new Server(s)).collect(Collectors.toList());
-			generateAllServerSchema(serverList1);
-		} catch (Exception e) {
-			log.error("Failed to run cron generate schema", e);
-		}
-	}
-
-	public void generateAllServerSchema(List<Server> servers) {
-		if (CollectionUtils.isEmpty(servers)) {
-			return;
-		}
-		for (int i = 0; i < servers.size(); i++) {
-			executorService.submit(new GenerateSchemaTask(this.ping, servers.get(i)));
-		}
+		Set<Server> removeList = serversStatus.keySet().stream().filter(server -> !event.getServerSet().contains(server)).collect(Collectors.toSet());
+		removeList.forEach(serversStatus::remove);
 	}
 
 	@Override
@@ -150,26 +115,71 @@ public class MdxPingStrategy implements IPingStrategy, ApplicationListener<Kylin
 		return results;
 	}
 
-	@Override
-	public synchronized void onApplicationEvent(KylinRefreshRoutesEvent event) {
-		for (Server server : serversStatus.keySet()) {
-			if (serversStatus.get(server).get() > retryTimes) {
-				removeServer(server.getId());
+	private void pingServers() {
+		try {
+			pingServers(Lists.newArrayList(serversStatus.keySet()));
+		} catch (Exception e) {
+			log.error("Failed to run cron ping servers", e);
+		}
+	}
+
+	public synchronized boolean[] pingServers(List<Server> servers) {
+		if (CollectionUtils.isEmpty(servers)) {
+			return new boolean[]{false};
+		}
+
+		boolean[] results = new boolean[servers.size()];
+
+		Future<Boolean>[] futures = new Future[servers.size()];
+
+		for (int i = 0; i < servers.size(); i++) {
+			futures[i] = executorService.submit(new CheckServerTask(this.ping, servers.get(i), mdxLoadManager));
+		}
+
+		for (int i = 0; i < servers.size(); i++) {
+			try {
+				results[i] = (Boolean) futures[i].get();
+			} catch (Exception e) {
+				log.error("Task execute failed, server: {}", servers.get(i));
 			}
 		}
-		Set<Server> removeList = serversStatus.keySet().stream().filter(server -> !event.getServerSet().contains(server)).collect(Collectors.toSet());
-		removeList.forEach(serversStatus::remove);
+		return results;
+	}
+
+	private void generateSchema() {
+		try {
+			List<String> serverList = new LinkedList<>();
+			for (MdxConfig.ProxyInfo proxyInfo : mdxConfig.getProxy()) {
+				serverList.addAll(proxyInfo.getServers());
+			}
+			List<Server> serverList1 = serverList.stream().map(Server::new).collect(Collectors.toList());
+			generateAllServerSchema(serverList1);
+		} catch (Exception e) {
+			log.error("Failed to run cron generate schema", e);
+		}
+	}
+
+	public void generateAllServerSchema(List<Server> servers) {
+		if (CollectionUtils.isEmpty(servers)) {
+			return;
+		}
+		for (Server server : servers) {
+			executorService.submit(new GenerateSchemaTask(this.ping, server));
+		}
 	}
 
 	private class CheckServerTask implements Callable<Boolean> {
 
-		private IPing ping;
+		private final IPing ping;
 
-		private Server server;
+		private final Server server;
 
-		private CheckServerTask(IPing ping, Server server) {
+		private final MdxLoadManager mdxLoadManager;
+
+		private CheckServerTask(IPing ping, Server server, MdxLoadManager mdxLoadManager) {
 			this.ping = ping;
 			this.server = server;
+			this.mdxLoadManager = mdxLoadManager;
 		}
 
 		@Override
@@ -183,7 +193,7 @@ public class MdxPingStrategy implements IPingStrategy, ApplicationListener<Kylin
 						case NORMAL:
 							errorTimes.set(0);
 							double load = ((MdxPing) ping).getServerLoad(server);
-							updateServerByMemLoad(server.getId(), load);
+							mdxLoadManager.updateServerByMemLoad(server.getId(), load);
 							return true;
 						case FATAL:
 							// stop route immediately
@@ -210,25 +220,6 @@ public class MdxPingStrategy implements IPingStrategy, ApplicationListener<Kylin
 			}
 
 			return errorTimes.incrementAndGet() < retryTimes;
-		}
-	}
-
-	private class GenerateSchemaTask implements Runnable {
-
-		private IPing ping;
-
-		private Server server;
-
-		private GenerateSchemaTask(IPing ping, Server server) {
-			this.ping = ping;
-			this.server = server;
-		}
-
-		@Override
-		public void run() {
-			if (ping instanceof MdxPing) {
-				((MdxPing) ping).generateSchema(server);
-			}
 		}
 	}
 

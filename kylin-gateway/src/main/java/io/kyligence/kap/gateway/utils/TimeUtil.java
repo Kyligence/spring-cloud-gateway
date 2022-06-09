@@ -15,13 +15,13 @@ import java.util.regex.Pattern;
 
 public class TimeUtil {
 
-	private static long SECOND_TO_MILLI = 1000L;
-	private static long ONE_MINUTE_TS = 60 * 1000L;
-	private static long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
-	private static final ImmutableMap<String, TimeUnit> timeSuffixes = ImmutableMap.<String, TimeUnit> builder()
+	private static final ImmutableMap<String, TimeUnit> timeSuffixes = ImmutableMap.<String, TimeUnit>builder()
 			.put("us", TimeUnit.MICROSECONDS).put("ms", TimeUnit.MILLISECONDS).put("s", TimeUnit.SECONDS)
 			.put("m", TimeUnit.MINUTES).put("min", TimeUnit.MINUTES).put("h", TimeUnit.HOURS).put("d", TimeUnit.DAYS)
 			.build();
+	private static final long SECOND_TO_MILLI = 1000L;
+	private static final long ONE_MINUTE_TS = 60 * 1000L;
+	private static final long ONE_HOUR_TS = 60 * ONE_MINUTE_TS;
 
 	public static long getSecondTime() {
 		return System.currentTimeMillis() / SECOND_TO_MILLI;

@@ -1,37 +1,36 @@
-
-server.port: 80
-
 mdx:
   check-url: /api/system/health
-  check-project:
+  check-project: learn_kylin
   load-url: /api/system/load
   generate-schema-url: /mdx/xmla/
-  sync-user:
-  sync-pwd:
-  serverSize: 50
-  cacheTime: 600
+  sync-username: ADMIN
+  sync-password: 0e15c5a01c30197ab27e58b555488b23
+  server-size: 50
+  cache-time: 600
   weight:
     memory: 0.5
     query: 0.5
-    threshold: 0.9
+    threshold: 0.8
   rest-template:
     connect-timeout: 1500
     read-timeout: 5000
   ping-strategy:
     retry-times: 3
-    interval-seconds: 3
-    generate-schema-interval-seconds: 1800
+    interval-seconds: 10
+    generate-schema-interval-seconds: 600
   proxy:
-    - mdx-ke4:
+    - mdx-server:
       type: mdx
-      host: test.com
+      route: consistent_hash
+      hosts:
+        - localhost
+        - 127.0.0.1
       servers:
         - 127.0.0.1:7080
-        - 127.0.0.1:7081
 
 spring:
   application:
-    name: kylin-gateway
+    name: mdx-server-gateway
   jmx:
     enabled: false
   cloud:
@@ -52,6 +51,7 @@ logging:
     reactor.netty: INFO
 
 server:
+  port: 80
   type: mdx
   datasource: config
   tomcat:
@@ -61,7 +61,7 @@ server:
       buffered: true
       directory: logs
       file-date-format: .yyyy-MM-dd
-      pattern: '%{yyyy-MM-dd HH:mm:ss,SSS}t %h %l %u "%r" %s %b %D'
+      pattern: '%{yyyy-MM-dd HH:mm:ss,SSS}t [%I] %h %l [%{Mdx-Query-Id}o] "%r" %s "%b bytes" "%D ms"'
       rotate: true
       rename-on-rotate: false
       prefix: access_log

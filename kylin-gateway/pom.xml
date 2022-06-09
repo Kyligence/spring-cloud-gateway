@@ -17,12 +17,12 @@
 	</parent>
 
 	<properties>
-		<lombok.version>1.18.22</lombok.version>
-		<guava.version>31.0.1-jre</guava.version>
-		<commons-collections.version>3.2.2</commons-collections.version>
 		<maven.build.timestamp.format>yyyy_MM_dd_HH_mm</maven.build.timestamp.format>
-		<commons-io.version>2.11.0</commons-io.version>
 		<package.name>${project.artifactId}-${maven.build.timestamp}</package.name>
+		<lombok.version>1.18.22</lombok.version>
+		<guava.version>31.1-jre</guava.version>
+		<commons-collections.version>3.2.2</commons-collections.version>
+		<commons-io.version>2.11.0</commons-io.version>
 	</properties>
 
 	<dependencyManagement>
@@ -147,12 +147,6 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<includes>
-						<include>
-							<groupId>null</groupId>
-							<artifactId>null</artifactId>
-						</include>
-					</includes>
 					<layout>ZIP</layout>
 				</configuration>
 			</plugin>

@@ -8,8 +8,8 @@ import io.kyligence.kap.gateway.constant.Kylin3xResourceGroupTypeEnum;
 import io.kyligence.kap.gateway.constant.KylinGatewayVersion;
 import io.kyligence.kap.gateway.entity.KylinRouteRaw;
 import io.kyligence.kap.gateway.event.KylinRefreshRoutesEvent;
-import io.kyligence.kap.gateway.filter.KylinLoadBalancer;
-import io.kyligence.kap.gateway.health.KylinPing;
+import io.kyligence.kap.gateway.loadbalancer.KylinLoadBalancer;
+import io.kyligence.kap.gateway.loadbalancer.KylinPing;
 import io.kyligence.kap.gateway.route.reader.IRouteTableReader;
 import io.kyligence.kap.gateway.utils.AsyncQueryUtil;
 import org.apache.commons.collections.CollectionUtils;
@@ -50,11 +50,11 @@ public class Kylin3xRefreshRouteTableScheduler implements ApplicationEventPublis
 
 	protected ApplicationEventPublisher publisher;
 
-	private AbstractGatewayControllerEndpoint gatewayControllerEndpoint;
+	private final AbstractGatewayControllerEndpoint gatewayControllerEndpoint;
 
-	private LoadBalancerClientFilter loadBalancerClientFilter;
+	private final LoadBalancerClientFilter loadBalancerClientFilter;
 
-	private IRouteTableReader routeTableReader;
+	private final IRouteTableReader routeTableReader;
 
 	@Autowired
 	private KylinPing ping;
@@ -62,7 +62,7 @@ public class Kylin3xRefreshRouteTableScheduler implements ApplicationEventPublis
 	@Autowired
 	private IPingStrategy pingStrategy;
 
-	private AtomicLong mvcc = new AtomicLong(0);
+	private final AtomicLong mvcc = new AtomicLong(0);
 
 	private List<KylinRouteRaw> oldRouteRawList = Lists.newArrayList();
 
@@ -173,11 +173,7 @@ public class Kylin3xRefreshRouteTableScheduler implements ApplicationEventPublis
 				return true;
 			}
 
-			if (CollectionUtils.isEmpty(kylinRouteRaw.getBackends())) {
-				return true;
-			}
-
-			return false;
+			return CollectionUtils.isEmpty(kylinRouteRaw.getBackends());
 		}).collect(Collectors.toList());
 
 		if (CollectionUtils.isNotEmpty(errorList)) {

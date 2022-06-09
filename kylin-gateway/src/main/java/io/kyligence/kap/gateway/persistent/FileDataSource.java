@@ -1,6 +1,6 @@
 package io.kyligence.kap.gateway.persistent;
 
-		import lombok.Data;
+import lombok.Data;
 
 @Data
 public class FileDataSource {

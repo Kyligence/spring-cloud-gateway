@@ -2,6 +2,7 @@ package io.kyligence.kap.gateway.persistent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import io.kyligence.kap.gateway.persistent.domain.KylinRouteDO;
 import io.kyligence.kap.gateway.persistent.domain.KylinRouteTableDO;
 import io.kyligence.kap.gateway.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +23,12 @@ public class KylinRouteRowMapper implements RowMapper<KylinRouteTableDO> {
 		val serviceId = rs.getString(3);
 		val routeTableStr = rs.getString(4);
 
-		List<KylinRouteTableDO.KylinRouteDO> routeTable = Lists.newArrayList();
+		List<KylinRouteDO> routeTable = Lists.newArrayList();
 
 		try {
 			Preconditions.checkNotNull(routeTableStr, "Jdbc route table is null !");
 
-			KylinRouteTableDO.KylinRouteDO[] routeArray = JsonUtil.toObject(routeTableStr, KylinRouteTableDO.KylinRouteDO[].class);
+			KylinRouteDO[] routeArray = JsonUtil.toObject(routeTableStr, KylinRouteDO[].class);
 
 			Preconditions.checkNotNull(routeArray, "Parse route table failed, return null !");
 

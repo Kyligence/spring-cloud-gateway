@@ -13,18 +13,23 @@ public class MdxConfig {
 
 	List<ProxyInfo> proxy;
 
+	public void setProxyInfo(List<ProxyInfo> proxyInfos) {
+		this.proxy = proxyInfos;
+	}
+
 	@Data
 	public static class ProxyInfo {
 
 		private String type;
 
+		private String route;
+
 		private String host;
+
+		private List<String> hosts;
 
 		private List<String> servers;
 
 	}
 
-	public void setProxyInfo(List<ProxyInfo> proxyInfos) {
-		this.proxy = proxyInfos;
-	}
 }

@@ -3,7 +3,6 @@ package io.kyligence.kap.gateway.route.transformer;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import io.kyligence.kap.gateway.entity.KylinRouteRaw;
 import io.kyligence.kap.gateway.entity.KylinRouteTable;
-import io.kyligence.kap.gateway.filter.KylinLoadBalancer;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 
 import java.util.List;

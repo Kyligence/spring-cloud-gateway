@@ -1,4 +1,4 @@
-package io.kyligence.kap.gateway.health;
+package io.kyligence.kap.gateway.loadbalancer;
 
 import com.netflix.loadbalancer.IPing;
 import com.netflix.loadbalancer.Server;
@@ -18,7 +18,8 @@ import java.util.Objects;
 @Slf4j
 @ConditionalOnProperty(name = "server.type", havingValue = KylinGatewayVersion.KYLIN_4X)
 public class KylinPing implements IPing {
-	private static final String HEALTH_URL_FROMAT = "http://%s%s";
+
+	private static final String HEALTH_URL_FORMAT = "http://%s%s";
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -31,20 +32,12 @@ public class KylinPing implements IPing {
 		return ErrorLevel.NORMAL == checkServer(server);
 	}
 
-	public enum ErrorLevel {
-		NORMAL,
-		WARN,
-		ERROR,
-		FATAL,
-		;
-	}
-
 	public ErrorLevel checkServer(Server server) {
 		if (Objects.isNull(server)) {
 			return ErrorLevel.FATAL;
 		}
 
-		String healthCheckUrl = String.format(HEALTH_URL_FROMAT, server.getId(), healthUrl);
+		String healthCheckUrl = String.format(HEALTH_URL_FORMAT, server.getId(), healthUrl);
 
 		try {
 			ResponseEntity<String> responseEntity = restTemplate.getForEntity(healthCheckUrl, String.class);
@@ -63,6 +56,13 @@ public class KylinPing implements IPing {
 		}
 
 		return ErrorLevel.WARN;
+	}
+
+	public enum ErrorLevel {
+		NORMAL,
+		WARN,
+		ERROR,
+		FATAL,
 	}
 
 }

@@ -4,10 +4,10 @@ import com.google.common.base.Preconditions;
 
 public class AsyncQueryUtil {
 
+	public static final String ASYNC_QUERY_SUFFIX_TAG = "ASYNC";
+
 	private AsyncQueryUtil() {
 	}
-
-	public static final String ASYNC_QUERY_SUFFIX_TAG = "ASYNC";
 
 	public static String buildAsyncQueryServiceId(String serviceId) {
 		Preconditions.checkNotNull(serviceId);

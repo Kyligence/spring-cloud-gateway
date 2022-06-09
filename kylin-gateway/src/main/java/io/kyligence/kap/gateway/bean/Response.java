@@ -13,17 +13,9 @@ public class Response<T> {
 
 	private String errorMsg;
 
-	public Response() {
-		this.status = Status.SUCCESS.ordinal();
-	}
-
 	public Response(T data) {
 		this.status = Status.SUCCESS.ordinal();
 		this.data = data;
-	}
-
-	public Response(int status) {
-		this.status = status;
 	}
 
 	public Response(Status status) {

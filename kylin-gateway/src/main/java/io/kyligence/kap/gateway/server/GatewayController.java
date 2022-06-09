@@ -3,10 +3,11 @@ package io.kyligence.kap.gateway.server;
 import com.alibaba.fastjson.JSONObject;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import io.kyligence.kap.gateway.bean.Response;
+import io.kyligence.kap.gateway.bean.ServerInfo;
 import io.kyligence.kap.gateway.config.MdxConfig;
-import io.kyligence.kap.gateway.config.UpdateConfig;
-import io.kyligence.kap.gateway.filter.MdxLoadBalancerClientFilter;
-import io.kyligence.kap.gateway.health.MdxLoad;
+import io.kyligence.kap.gateway.config.ProxyConfig;
+import io.kyligence.kap.gateway.manager.MdxLoadManager;
+import io.kyligence.kap.gateway.manager.ServiceManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,14 +23,16 @@ import java.util.Map;
 @RequestMapping("api")
 public class GatewayController {
 
-	private static final String CONFIG_FILE = "spring.config.additional-location";
-
 	public final static String RESP_SUC = "success";
-
 	public final static String FAIL = "failed";
+
+	private static final String CONFIG_FILE = "spring.config.additional-location";
 
 	@Autowired
 	private MdxConfig mdxConfig;
+
+	@Autowired
+	private ServiceManager serviceManager;
 
 	@GetMapping("gateway/admin/reload")
 	public Response<String> reload() {
@@ -39,13 +42,13 @@ public class GatewayController {
 			YamlReader reader = new YamlReader(new FileReader(configPath));
 			Object object = reader.read(Object.class);
 			String jsonStr = JSONObject.toJSONString(object);
-			UpdateConfig updateConfig = JSONObject.parseObject(jsonStr, UpdateConfig.class);
-			mdxConfig.setProxyInfo(updateConfig.getMdx().getProxy());
+			ProxyConfig proxyConfig = JSONObject.parseObject(jsonStr, ProxyConfig.class);
+			mdxConfig.setProxyInfo(proxyConfig.getMdx().getProxy());
 			log.info("reload gateway config success!");
 			return new Response<String>(Response.Status.SUCCESS)
 					.data(RESP_SUC);
 		} catch (Exception e) {
-			log.error("reload gateway config catch error: " + e);
+			log.error("reload gateway config catch error: ", e);
 			Response<String> response = new Response<>(Response.Status.FAIL, FAIL);
 			response.errorMsg("reload gateway config catch error: " + e);
 			return response;
@@ -53,15 +56,15 @@ public class GatewayController {
 	}
 
 	@GetMapping("gateway/status/load")
-	public Response<Map<String, MdxLoad.LoadInfo>> getLoad() {
+	public Response<Map<String, MdxLoadManager.LoadInfo>> getLoad() {
 		log.info("http call url: api/gateway/status/load");
-		return new Response<>(MdxLoad.LOAD_INFO_MAP);
+		return new Response<>(MdxLoadManager.LOAD_INFO_MAP);
 	}
 
 	@GetMapping("gateway/status/route")
-	public Response<Map<String, MdxLoadBalancerClientFilter.ServerInfo>> getRouteStatus() {
+	public Response<Map<String, ServerInfo>> getRouteStatus() {
 		log.info("http call url: api/gateway/status/route");
-		return new Response<>(MdxLoadBalancerClientFilter.serverMap);
+		return new Response<>(serviceManager.serverMap);
 	}
 
 	@GetMapping("gateway/health")

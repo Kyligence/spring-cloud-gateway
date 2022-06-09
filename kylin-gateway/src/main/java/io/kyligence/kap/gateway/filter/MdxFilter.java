@@ -1,9 +1,6 @@
 package io.kyligence.kap.gateway.filter;
 
-import java.net.URI;
-import java.util.List;
-
-import io.kyligence.kap.gateway.health.MdxLoad;
+import io.kyligence.kap.gateway.manager.MdxLoadManager;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -16,6 +13,9 @@ import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
+import java.util.List;
+
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
 
 /**
@@ -26,6 +26,12 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 public class MdxFilter implements GlobalFilter, Ordered {
 
 	public final static String MDX_QUERY_ID = "Mdx-Query-Id";
+
+	private final MdxLoadManager mdxLoadManager;
+
+	public MdxFilter(MdxLoadManager mdxLoadManager) {
+		this.mdxLoadManager = mdxLoadManager;
+	}
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -42,7 +48,7 @@ public class MdxFilter implements GlobalFilter, Ordered {
 						String queryId = params.get(0);
 						log.info("MDX query id: {} send to node: {}", queryId, serverId);
 					}
-					MdxLoad.updateServerByQueryNum(serverId, -1);
+					mdxLoadManager.updateServerByQueryNum(serverId, -1);
 				}
 				return super.writeWith(body);
 			}
