@@ -1,4 +1,3 @@
-
 server.port: 80
 
 mdx:
@@ -20,13 +19,14 @@ mdx:
   ping-strategy:
     retry-times: 3
     interval-seconds: 10
+    generate-schema: false
     generate-schema-interval-seconds: 600
   proxy:
     - mdx-server:
       type: mdx
       route: consistent_hash
+      host: localhost
       hosts:
-        - localhost
         - 127.0.0.1
       servers:
         - 127.0.0.1:7080
@@ -52,21 +52,10 @@ logging:
     org.springframework.web.reactive: INFO
     reactor.ipc.netty: INFO
     reactor.netty: INFO
+    com.netflix.util.concurrent: ERROR
 
 server:
   type: mdx
   datasource: config
-  tomcat:
-    basedir: ./
-    accesslog:
-      enabled: true
-      buffered: true
-      directory: logs
-      file-date-format: .yyyy-MM-dd
-      pattern: '%{yyyy-MM-dd HH:mm:ss,SSS}t [%I] %h %l [%{Mdx-Query-Id}o] "%r" %s "%b bytes" "%D ms"'
-      rotate: true
-      rename-on-rotate: false
-      prefix: access_log
-      suffix: .log
 
 management.endpoints.web.exposure.include: health, gateway

@@ -2,13 +2,20 @@ package io.kyligence.kap.gateway.manager;
 
 import com.netflix.loadbalancer.Server;
 import io.kyligence.kap.gateway.bean.ServerInfo;
+import io.kyligence.kap.gateway.manager.task.ClearExpiredServerTask;
 import io.kyligence.kap.gateway.utils.TimeUtil;
+import io.netty.util.concurrent.DefaultThreadFactory;
+import lombok.Getter;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.netflix.ribbon.RibbonLoadBalancerClient;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class ServiceManager {
@@ -17,10 +24,23 @@ public class ServiceManager {
 
 	/**
 	 * server cache
-	 * key: BI request: user_project, normal request: host
+	 * key: BI request: user_project, normal request: host or ip
 	 * value: ServerInfo, contains: server ip:port, cache start time and cache update time
 	 */
-	public final Map<String, ServerInfo> serverMap = new ConcurrentHashMap<>();
+	@Getter
+	private final Map<String, ServerInfo> serverMap = new ConcurrentHashMap<>();
+
+	private final ScheduledExecutorService scheduledExecService = new ScheduledThreadPoolExecutor(1, new DefaultThreadFactory("schedule-server"));
+
+	@PostConstruct
+	public void init() {
+		scheduledExecService.scheduleWithFixedDelay(
+				new ClearExpiredServerTask(serverMap),
+				30,
+				30,
+				TimeUnit.SECONDS
+		);
+	}
 
 	public ServiceInstance getServiceInstance(String hostName, String serverKey) {
 		ServerInfo serverInfo = serverMap.get(serverKey);

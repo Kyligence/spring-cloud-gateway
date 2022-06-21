@@ -1,12 +1,9 @@
 package io.kyligence.kap.gateway.filter;
 
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 import io.kyligence.kap.gateway.bean.ServerInfo;
-import io.kyligence.kap.gateway.constant.LoadBalancerStrategy;
 import io.kyligence.kap.gateway.loadbalancer.MdxLoadBalancer;
 import io.kyligence.kap.gateway.manager.MdxLoadManager;
 import io.kyligence.kap.gateway.manager.ServiceManager;
@@ -29,7 +26,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -43,6 +39,7 @@ public class MdxLoadBalancerClientFilter extends LoadBalancerClientFilter
 
 	private static final String X_HOST = "X-Host";
 	private static final String X_PORT = "X-Port";
+	private static final String DEFAULT_KEY = "default";
 
 	private Map<String, MdxLoadBalancer> resourceGroups = new ConcurrentHashMap<>();
 
@@ -93,39 +90,37 @@ public class MdxLoadBalancerClientFilter extends LoadBalancerClientFilter
 			}
 		}
 
-		// BI request, routed by user and project
-		String projectName = null;
-		String userName = null;
+		String username = null;
+		String project = null;
 		try {
-			String contextPath = MdxAuthenticationUtils.getProjectContext(request.getPath().toString());
-			projectName = MdxAuthenticationUtils.getProjectName(contextPath);
-			userName = MdxAuthenticationUtils.getUsername(request);
-		} catch (Exception e) {
-			// Nothing to do
+			username = MdxAuthenticationUtils.getUsername(request);
+			project = MdxAuthenticationUtils.getProject(request.getPath().toString());
+		} catch (Exception ignored) {
 		}
 
-		String serverKey = "";
-		if (StringUtils.isNotBlank(projectName) && StringUtils.isNotBlank(userName)) {
-			serverKey = userName.toUpperCase() + "_" + projectName;
-			ServiceInstance serviceInstance = serviceManager.getServiceInstance(hostName, serverKey);
-			if (serviceInstance != null) {
-				mdxLoadManager.updateServerByQueryNum(serviceInstance.getUri().getAuthority(), 1);
-				return serviceInstance;
+		String serverKey;
+		if (StringUtils.isNotBlank(username)) {
+			// BI request, routed by user and project
+			if (StringUtils.isBlank(project)) {
+				project = DEFAULT_KEY;
+			}
+			serverKey = username.toUpperCase() + "_" + project;
+		} else {
+			// Normal request, routed by request host
+			InetSocketAddress remoteAddress = remoteAddressResolver.resolve(exchange);
+			if (remoteAddress != null) {
+				serverKey = remoteAddress.getHostString();
+			} else {
+				serverKey = DEFAULT_KEY;
 			}
 		}
 
-		// Normal request, routed by request host
-		InetSocketAddress remoteAddress = remoteAddressResolver.resolve(exchange);
-		if (StringUtils.isBlank(serverKey) && remoteAddress != null) {
-			serverKey = remoteAddress.getHostString();
-			ServiceInstance serviceInstance = serviceManager.getServiceInstance(hostName, serverKey);
-			if (serviceInstance != null) {
-				mdxLoadManager.updateServerByQueryNum(serviceInstance.getUri().getAuthority(), 1);
-				return serviceInstance;
-			}
+		ServiceInstance serviceInstance = serviceManager.getServiceInstance(hostName, serverKey);
+		if (serviceInstance != null) {
+			mdxLoadManager.updateServerByQueryNum(serviceInstance.getUri().getAuthority(), 1);
+			return serviceInstance;
 		}
-
-		return choose(hostName, serverKey, null);
+		return choose(hostName, serverKey);
 	}
 
 	@Override
@@ -163,8 +158,8 @@ public class MdxLoadBalancerClientFilter extends LoadBalancerClientFilter
 		return resourceGroups.values().stream().collect(Collectors.toMap(MdxLoadBalancer::getServiceId, value -> Arrays.toString(value.getAllServers().toArray())));
 	}
 
-	private ServiceInstance choose(String serviceId, String serverKey, Object hint) {
-		Server server = getServer(serviceId, serverKey, hint);
+	private ServiceInstance choose(String serviceId, String serverKey) {
+		Server server = getServer(serviceId, serverKey);
 		if (server == null) {
 			log.warn("Host: {}, 503, Service Unavailable!", serviceId);
 			return null;
@@ -175,46 +170,12 @@ public class MdxLoadBalancerClientFilter extends LoadBalancerClientFilter
 		return new RibbonLoadBalancerClient.RibbonServer(serviceId, server);
 	}
 
-	private Server getServer(String serviceId, String serviceKey, Object hint) {
+	private Server getServer(String serviceId, String serviceKey) {
 		ILoadBalancer loadBalancer = getLoadBalancer(serviceId);
 		if (loadBalancer == null) {
 			return null;
 		}
-
-		MdxLoadBalancer mdxLoadBalancer = (MdxLoadBalancer) loadBalancer;
-
-		String strategy = mdxLoadBalancer.getStrategy();
-		if (LoadBalancerStrategy.CONSISTENT_HASH.name().equalsIgnoreCase(strategy)) {
-			// consistent hash strategy
-			List<Server> servers = loadBalancer.getAllServers();
-
-			HashCode hashCode = Hashing.murmur3_128().hashString(serviceKey, Charset.defaultCharset());
-			int index = Hashing.consistentHash(hashCode, servers.size());
-			return servers.get(index);
-
-		} else {
-			// choose node server by cluster server load
-			List<Server> serverList = loadBalancer.getAllServers();
-			Server chooseServer = null;
-			double lowLoad = Double.MAX_VALUE;
-			for (Server server : serverList) {
-				MdxLoadManager.LoadInfo loadInfo = MdxLoadManager.LOAD_INFO_MAP.get(server.getId());
-				if (loadInfo == null || loadInfo.getNodeLoad() == null) {
-					continue;
-				}
-				double nodeLoad = loadInfo.getNodeLoad();
-				if (nodeLoad < lowLoad) {
-					chooseServer = server;
-					lowLoad = nodeLoad;
-				}
-			}
-			if (chooseServer != null) {
-				return chooseServer;
-			}
-		}
-
-		// Use 'default' on a null hint, or just pass it on
-		return loadBalancer.chooseServer(hint != null ? hint : "default");
+		return loadBalancer.chooseServer(serviceKey);
 	}
 
 }

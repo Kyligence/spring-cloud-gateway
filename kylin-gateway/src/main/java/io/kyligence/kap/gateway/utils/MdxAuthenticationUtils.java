@@ -53,48 +53,43 @@ public class MdxAuthenticationUtils {
 
 	private static final String AUTHORIZATION = "Authorization";
 
-	private static final int SALT_LENGTH = 5;
-
 	private MdxAuthenticationUtils() {
 	}
 
-	public static String getProjectContext(String contextPath) {
+	public static String getProject(String mdxUrl) {
 		String projectContext = "";
-		Matcher uriMatcher = URI_PATTERN_0.matcher(contextPath);
+		Matcher uriMatcher = URI_PATTERN_0.matcher(mdxUrl);
 		if (uriMatcher.find()) {
 			projectContext = uriMatcher.group(1);
 		} else {
-			uriMatcher = URI_PATTERN_1.matcher(contextPath);
+			uriMatcher = URI_PATTERN_1.matcher(mdxUrl);
 			if (uriMatcher.find()) {
 				projectContext = uriMatcher.group(1);
 			}
 		}
-		return projectContext;
-	}
+		if (StringUtils.isBlank(projectContext)) {
+			return null;
+		}
 
-	public static String getProjectName(String projectContext) {
-		String project = "";
 		int clearCacheFlagIdx = projectContext.indexOf("clearCache");
 		int deprecateCacheFlagIdx = projectContext.indexOf("/clearCache");
 		if (deprecateCacheFlagIdx != -1 && "".equals(projectContext.substring(0, deprecateCacheFlagIdx))) {
 			// etc "/mdx/xmla//clearCache"
 		} else if (deprecateCacheFlagIdx != -1 && !"".equals(projectContext.substring(0, deprecateCacheFlagIdx))) {
 			// etc "/mdx/xmla/learn_kylin/clearCache"
-			project = projectContext.substring(0, deprecateCacheFlagIdx);
+			return projectContext.substring(0, deprecateCacheFlagIdx);
 		} else if (clearCacheFlagIdx != -1) {
 			// etc "/mdx/xmla/clearCache"
 		} else {
 			// etc "/mdx/xmla/learn_kylin"
-			project = projectContext;
+			return projectContext;
 		}
-		return project;
+		return null;
 	}
 
 	public static String getUsername(ServerHttpRequest request) {
-		String username;
-
 		// Delegate user, get user from 'EXECUTE_AS_USER_ID' parameter
-		username = request.getQueryParams().getFirst(EXECUTE_AS_USER_ID);
+		String username = request.getQueryParams().getFirst(EXECUTE_AS_USER_ID);
 		if (StringUtils.isNotBlank(username)) {
 			return username;
 		}
@@ -107,29 +102,25 @@ public class MdxAuthenticationUtils {
 
 		HttpHeaders headers = request.getHeaders();
 		// Get username from 'authorization' header
-		List<String> authList = headers.get(AUTHORIZATION);
-		if (authList != null) {
-			username = parseAuthInfo(authList.get(0));
-			return username;
+		List<String> basicAuth = headers.get(AUTHORIZATION);
+		if (basicAuth != null) {
+			return parseAuthInfo(basicAuth.get(0));
+		}
+
+		// Get username from 'GatewayAuth' header
+		List<String> gatewayAuth = headers.get(HEADER_NAME_GATEWAY);
+		if (gatewayAuth != null) {
+			return parseAuthInfo(gatewayAuth.get(0));
 		}
 
 		// Get username from cookie
 		HttpCookie mdxAuthCookie = getSessionAuthCookie(request);
 		if (mdxAuthCookie != null) {
 			String cookieValue = mdxAuthCookie.getValue();
-			String decodeTxt = decodeTxt(SALT_LENGTH, cookieValue);
-			String[] authInfos = decodeTxt.split(":");
-			username = authInfos[0];
-			return username;
+			return getUsernameFromCookieValue(cookieValue);
 		}
 
-		// Get username from 'GatewayAuth' header
-		List<String> gatewayAuthList = headers.get(HEADER_NAME_GATEWAY);
-		if (gatewayAuthList != null && gatewayAuthList.get(0) != null) {
-			return parseAuthInfo(gatewayAuthList.get(0));
-		}
-
-		return username;
+		return null;
 	}
 
 	private static String parseAuthInfo(String authorization) {
@@ -149,33 +140,24 @@ public class MdxAuthenticationUtils {
 
 	private static HttpCookie getSessionAuthCookie(ServerHttpRequest request) {
 		MultiValueMap<String, HttpCookie> cs = request.getCookies();
-		List<HttpCookie> httpCookieList = cs.get(MDX_AUTH);
-		if (httpCookieList == null) {
-			return null;
-		}
-		for (HttpCookie cookie : httpCookieList) {
-			if (MDX_AUTH.equals(cookie.getName())) {
-				return cookie;
+		for (String cookieName : cs.keySet()) {
+			if (cookieName.startsWith("mdx_session")) {
+				for (HttpCookie cookie : cs.get(cookieName)) {
+					return cookie;
+				}
 			}
 		}
 		return null;
 	}
 
-	public static String decodeTxt(int length, String encodedTxt) {
-		String decodeUserPwd = new String(Base64.decode(encodedTxt), StandardCharsets.UTF_8);
-		return decodeUserPwd.substring(length);
-	}
-
-	public static String getUserFromParameter(HttpHeaders headers, String parameter) {
-		String username = "";
-		List<String> valueList = headers.get(parameter);
-		if (valueList != null) {
-			username = valueList.get(0);
-			if (StringUtils.isNotBlank(username)) {
-				return username;
-			}
+	private static String getUsernameFromCookieValue(String encodedTxt) {
+		String decoded = new String(Base64.decode(encodedTxt), StandardCharsets.UTF_8);
+		String[] array = decoded.split(":", 4);
+		if (array.length >= 2) {
+			return array[1];
+		} else {
+			return null;
 		}
-		return username;
 	}
 
 }

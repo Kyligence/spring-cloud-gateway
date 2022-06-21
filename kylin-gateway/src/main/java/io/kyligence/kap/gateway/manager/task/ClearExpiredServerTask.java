@@ -2,17 +2,12 @@ package io.kyligence.kap.gateway.manager.task;
 
 import io.kyligence.kap.gateway.bean.ServerInfo;
 import io.kyligence.kap.gateway.manager.MdxLoadManager;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ClearExpiredServerTask implements Runnable {
@@ -23,20 +18,8 @@ public class ClearExpiredServerTask implements Runnable {
 
 	public final Map<String, ServerInfo> serverMap;
 
-	private final ScheduledExecutorService scheduledExecService = new ScheduledThreadPoolExecutor(1, new DefaultThreadFactory("schedule-server"));
-
 	public ClearExpiredServerTask(Map<String, ServerInfo> serverMap) {
 		this.serverMap = serverMap;
-	}
-
-	@PostConstruct
-	public void init() {
-		scheduledExecService.scheduleWithFixedDelay(
-				this,
-				0,
-				30,
-				TimeUnit.SECONDS
-		);
 	}
 
 	@Override

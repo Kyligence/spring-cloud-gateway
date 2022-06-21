@@ -29,6 +29,7 @@ public class MdxPing implements IPing {
 	public final static String BASIC_AUTH_PREFIX = "Basic ";
 	private static final String HEALTH_URL_FORMAT = "http://%s%s";
 	private static final Double MAX_LOAD = 100.0d;
+
 	@Autowired
 	private RestTemplate restTemplate;
 

@@ -1,7 +1,7 @@
-package io.kyligence.kap.gateway.config;
+package io.kyligence.kap.gateway.config.autoconfig;
 
 import io.kyligence.kap.gateway.constant.KylinGatewayVersion;
-import io.kyligence.kap.gateway.filter.KylinLoadBalancerClientFilter;
+import io.kyligence.kap.gateway.filter.Kylin3XLoadBalancerClientFilter;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -16,19 +16,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.DispatcherHandler;
 
-@ConditionalOnProperty(name = "server.type", havingValue = KylinGatewayVersion.KYLIN_4X)
+@ConditionalOnProperty(name = "server.type", havingValue = KylinGatewayVersion.KYLIN_3X)
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass({LoadBalancerClient.class, RibbonAutoConfiguration.class,
 		DispatcherHandler.class})
 @AutoConfigureAfter(RibbonAutoConfiguration.class)
 @EnableConfigurationProperties(LoadBalancerProperties.class)
-public class GatewayKylinLoadBalancerClientAutoConfiguration {
+public class Kylin3XGatewayLoadBalancerClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean({LoadBalancerClientFilter.class,
 			ReactiveLoadBalancerClientFilter.class})
 	public LoadBalancerClientFilter loadBalancerClientFilter(LoadBalancerClient client,
 															 LoadBalancerProperties properties) {
-		return new KylinLoadBalancerClientFilter(client, properties);
+		return new Kylin3XLoadBalancerClientFilter(client, properties);
 	}
+
 }

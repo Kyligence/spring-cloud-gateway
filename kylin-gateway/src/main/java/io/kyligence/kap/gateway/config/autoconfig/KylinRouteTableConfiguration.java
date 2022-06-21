@@ -1,4 +1,4 @@
-package io.kyligence.kap.gateway.config;
+package io.kyligence.kap.gateway.config.autoconfig;
 
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import io.kyligence.kap.gateway.constant.KylinGatewayVersion;

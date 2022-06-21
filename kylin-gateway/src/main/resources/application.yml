@@ -1,3 +1,5 @@
+server.port: 80
+
 mdx:
   check-url: /api/system/health
   check-project: learn_kylin
@@ -17,6 +19,7 @@ mdx:
   ping-strategy:
     retry-times: 3
     interval-seconds: 10
+    generate-schema: false
     generate-schema-interval-seconds: 600
   proxy:
     - mdx-server:
@@ -25,8 +28,12 @@ mdx:
       hosts:
         - localhost
         - 127.0.0.1
+        - 10.37.129.2
       servers:
-        - 127.0.0.1:7080
+        - 10.1.5.100:7080
+        - 10.1.5.101:7080
+        - 10.1.5.102:7080
+        - 10.1.5.103:7080
 
 spring:
   application:
@@ -49,22 +56,10 @@ logging:
     org.springframework.web.reactive: INFO
     reactor.ipc.netty: INFO
     reactor.netty: INFO
+    com.netflix.util.concurrent: ERROR
 
 server:
-  port: 80
   type: mdx
   datasource: config
-  tomcat:
-    basedir: ./
-    accesslog:
-      enabled: true
-      buffered: true
-      directory: logs
-      file-date-format: .yyyy-MM-dd
-      pattern: '%{yyyy-MM-dd HH:mm:ss,SSS}t [%I] %h %l [%{Mdx-Query-Id}o] "%r" %s "%b bytes" "%D ms"'
-      rotate: true
-      rename-on-rotate: false
-      prefix: access_log
-      suffix: .log
 
 management.endpoints.web.exposure.include: health, gateway

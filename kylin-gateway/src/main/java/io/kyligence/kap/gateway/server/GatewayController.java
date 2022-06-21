@@ -64,7 +64,7 @@ public class GatewayController {
 	@GetMapping("gateway/status/route")
 	public Response<Map<String, ServerInfo>> getRouteStatus() {
 		log.info("http call url: api/gateway/status/route");
-		return new Response<>(serviceManager.serverMap);
+		return new Response<>(serviceManager.getServerMap());
 	}
 
 	@GetMapping("gateway/health")

@@ -1,8 +1,8 @@
-package io.kyligence.kap.gateway.config;
+package io.kyligence.kap.gateway.config.autoconfig;
 
 import io.kyligence.kap.gateway.exception.KylinErrorAttributes;
 import io.kyligence.kap.gateway.filter.KylinRedirectToGatewayFilter;
-import io.kyligence.kap.gateway.filter.MdxFilter;
+import io.kyligence.kap.gateway.filter.MdxLoadMonitorFilter;
 import io.kyligence.kap.gateway.manager.MdxLoadManager;
 import io.kyligence.kap.gateway.predicate.KylinGlobalRoutePredicateFactory;
 import io.kyligence.kap.gateway.predicate.KylinRoutePredicateFactory;
@@ -41,20 +41,14 @@ public class KylinGatewayAutoConfiguration {
 	}
 
 	@Bean
+	public DefaultErrorAttributes errorAttributes() {
+		return new KylinErrorAttributes();
+	}
+
+	@Bean
 	@ConditionalOnProperty(name = "server.type", havingValue = "ke")
 	public KylinRedirectToGatewayFilter kylinRedirectToGatewayFilter() {
 		return new KylinRedirectToGatewayFilter();
-	}
-
-	@Bean
-	@ConditionalOnProperty(name = "server.type", havingValue = "mdx")
-	public MdxFilter mdxFilter(MdxLoadManager mdxLoadManager) {
-		return new MdxFilter(mdxLoadManager);
-	}
-
-	@Bean
-	public DefaultErrorAttributes errorAttributes() {
-		return new KylinErrorAttributes();
 	}
 
 }

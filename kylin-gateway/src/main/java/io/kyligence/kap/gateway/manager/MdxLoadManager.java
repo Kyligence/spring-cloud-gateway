@@ -35,23 +35,26 @@ public class MdxLoadManager {
 
 	private static Double threshold;
 
-	@Autowired
-	private ServiceManager serviceManager;
+	private final ServiceManager serviceManager;
 
-	public void updateServerByMemLoad(String serverId, double memLoad) {
+	@Autowired
+	public MdxLoadManager(ServiceManager serviceManager) {
+		this.serviceManager = serviceManager;
+	}
+
+	public synchronized void updateServerByMemLoad(String serverId, double memLoad) {
 		if (StringUtils.isBlank(serverId)) {
 			return;
 		}
 
 		if (memLoad > threshold) {
-			for (Map.Entry<String, ServerInfo> entry :
-					serviceManager.serverMap.entrySet()) {
+			for (Map.Entry<String, ServerInfo> entry : serviceManager.getServerMap().entrySet()) {
 				ServerInfo serverInfo = entry.getValue();
 				if (serverInfo == null) {
 					continue;
 				}
 				if (serverId.equals(serverInfo.getServer())) {
-					serviceManager.serverMap.remove(entry.getKey());
+					serviceManager.getServerMap().remove(entry.getKey());
 				}
 			}
 		}
@@ -65,7 +68,7 @@ public class MdxLoadManager {
 		LOAD_INFO_MAP.put(serverId, loadInfo);
 	}
 
-	public void updateServerByQueryNum(String serverId, double queryNum) {
+	public synchronized void updateServerByQueryNum(String serverId, double queryNum) {
 		if (StringUtils.isBlank(serverId)) {
 			return;
 		}
@@ -85,13 +88,13 @@ public class MdxLoadManager {
 
 	public void removeServer(String serverKey) {
 		LOAD_INFO_MAP.remove(serverKey);
-		for (Map.Entry<String, ServerInfo> entry : serviceManager.serverMap.entrySet()) {
+		for (Map.Entry<String, ServerInfo> entry : serviceManager.getServerMap().entrySet()) {
 			ServerInfo serverInfo = entry.getValue();
 			if (serverInfo == null) {
 				continue;
 			}
 			if (serverKey.equals(serverInfo.getServer())) {
-				serviceManager.serverMap.remove(entry.getKey());
+				serviceManager.getServerMap().remove(entry.getKey());
 			}
 		}
 		log.info("removed server: {} from active server list", serverKey);
@@ -135,6 +138,7 @@ public class MdxLoadManager {
 		private Double queryLoad;
 
 		private Double nodeLoad;
+
 	}
 
 }

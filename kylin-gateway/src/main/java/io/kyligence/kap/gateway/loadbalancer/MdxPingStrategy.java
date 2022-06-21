@@ -50,13 +50,15 @@ public class MdxPingStrategy implements IPingStrategy, ApplicationListener<Kylin
 
 	private int generateSchemaIntervalSeconds;
 
-	private IPing ping;
+	private boolean generateSchema;
 
 	@Autowired
 	private MdxConfig mdxConfig;
 
 	@Autowired
 	private MdxLoadManager mdxLoadManager;
+
+	private IPing ping;
 
 	public MdxPingStrategy(IPing ping) {
 		this.ping = ping;
@@ -65,7 +67,9 @@ public class MdxPingStrategy implements IPingStrategy, ApplicationListener<Kylin
 
 	@PostConstruct
 	public void init() {
-		pingRefresher.scheduleWithFixedDelay(this::generateSchema, 0, generateSchemaIntervalSeconds, TimeUnit.SECONDS);
+		if (generateSchema) {
+			pingRefresher.scheduleWithFixedDelay(this::generateSchema, 0, generateSchemaIntervalSeconds, TimeUnit.SECONDS);
+		}
 		pingRefresher.scheduleWithFixedDelay(this::pingServers, 10, intervalSeconds > 0 ? intervalSeconds : 3, TimeUnit.SECONDS);
 	}
 
@@ -138,7 +142,7 @@ public class MdxPingStrategy implements IPingStrategy, ApplicationListener<Kylin
 
 		for (int i = 0; i < servers.size(); i++) {
 			try {
-				results[i] = (Boolean) futures[i].get();
+				results[i] = futures[i].get();
 			} catch (Exception e) {
 				log.error("Task execute failed, server: {}", servers.get(i));
 			}
