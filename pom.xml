@@ -69,10 +69,26 @@
 		<spring-security.version>5.6.9</spring-security.version>
 		<jackson-bom.version>2.13.4.20221013</jackson-bom.version>
 		<netty-bom.version>4.1.85.Final</netty-bom.version>
+		<tomcat.version>9.0.68</tomcat.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>org.apache.tomcat.embed</groupId>
+				<artifactId>tomcat-embed-core</artifactId>
+				<version>${tomcat.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.tomcat.embed</groupId>
+				<artifactId>tomcat-embed-el</artifactId>
+				<version>${tomcat.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.tomcat.embed</groupId>
+				<artifactId>tomcat-embed-websocket</artifactId>
+				<version>${tomcat.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>io.netty</groupId>
 				<artifactId>netty-bom</artifactId>
