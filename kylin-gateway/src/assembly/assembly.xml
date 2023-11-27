@@ -14,6 +14,9 @@
 			<scope>runtime</scope>
 			<outputDirectory>server/jars</outputDirectory>
 			<useProjectArtifact>false</useProjectArtifact>
+			<excludes>
+				<exclude>com.mysql:mysql-connector-j</exclude>
+			</excludes>
 		</dependencySet>
 	</dependencySets>
 
@@ -45,6 +48,11 @@
 			<outputDirectory>server</outputDirectory>
 			<fileMode>0644</fileMode>
 			<destName>gateway.jar</destName>
+		</file>
+		<file>
+			<source>target/mysql-connector-j-8.2.0.jar</source>
+			<outputDirectory>server/ext</outputDirectory>
+			<fileMode>0644</fileMode>
 		</file>
 		<file>
 			<source>target/commit_SHA1</source>
