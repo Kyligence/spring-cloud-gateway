@@ -63,10 +63,18 @@
 		<protobuf.version>3.21.7</protobuf.version>
 		<snakeyaml.version>2.0</snakeyaml.version>
 		<spring.boot.version>2.7.18</spring.boot.version>
+		<spring-security.version>5.7.12</spring-security.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-bom</artifactId>
+				<version>${spring-security.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.security</groupId>
 				<artifactId>spring-security-rsa</artifactId>
