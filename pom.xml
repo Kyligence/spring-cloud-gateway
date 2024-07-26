@@ -195,6 +195,11 @@
 				<artifactId>snakeyaml</artifactId>
 				<version>${snakeyaml.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-web</artifactId>
+				<version>5.3.33</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
