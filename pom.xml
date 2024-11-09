@@ -64,7 +64,7 @@
 		<snakeyaml.version>2.0</snakeyaml.version>
 		<spring.boot.version>2.7.18</spring.boot.version>
 		<spring-security.version>5.7.12</spring-security.version>
-		<tomcat.version>9.0.90</tomcat.version>
+		<tomcat.version>9.0.91</tomcat.version>
 	</properties>
 
 	<dependencyManagement>
