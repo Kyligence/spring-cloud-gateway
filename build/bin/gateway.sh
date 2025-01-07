@@ -82,6 +82,38 @@ function stop_gateway() {
     fi
 }
 
+function backup_gateway() {
+    if [[ -d ${GATEWAY_HOME}/backup ]]; then
+        if [[ -z $(ls -A ${GATEWAY_HOME}/backup) ]]; then
+            echo "backup 文件已存在，但是为空"
+        else
+            filename_suffix=$(date + "%Y%m%d%H%M%S")
+            filename="backup_history_${filename_suffix}"
+            mv ${GATEWAY_HOME}/backup ${filename}
+        fi
+    fi
+    mkdir -p ${GATEWAY_HOME}/backup
+    mv ${GATEWAY_HOME}/commit_SHA1 ${GATEWAY_HOME}/conf ${GATEWAY_HOME}/server ${GATEWAY_HOME}/VERSION ${GATEWAY_HOME}/backup
+}
+
+
+function rollback_gateway() {
+    if [[ -d ${GATEWAY_HOME}/backup ]]; then
+        if [[ -z $(ls -A ${GATEWAY_HOME}/backup) ]]; then
+            echo "backup 文件已存在，但是为空"
+            return 1
+        else
+            filename_suffix=$(date + "%Y%m%d%H%M%S")
+            filename="rollback_${filename_suffix}"
+            mkdir -p ${GATEWAY_HOME}/${filename}
+            mv ${GATEWAY_HOME}/commit_SHA1 ${GATEWAY_HOME}/conf ${GATEWAY_HOME}/server ${GATEWAY_HOME}/VERSION ${GATEWAY_HOME}/${filename}
+            mv ${GATEWAY_HOME}/backup/commit_SHA1 ${GATEWAY_HOME}/backup/conf ${GATEWAY_HOME}/backup/server ${GATEWAY_HOME}/backup/VERSION ${GATEWAY_HOME}
+        fi
+    else
+        return 1
+    fi
+}
+
 if [[ "$1" == "start" ]]; then
     start_gateway
 elif [[ "$1" == "stop" ]]; then
@@ -90,6 +122,10 @@ elif [[ "$1" == "restart" ]]; then
     echo `date '+%Y-%m-%d %H:%M:%S '`"Restarting Gateway..."
     stop_gateway
     start_gateway
+elif [[ "$1" == "backup" ]]; then
+    backup_gateway
+elif [[ "$1" == "rollback" ]]; then
+    rollback_gateway
 else
     quit "Usage: 'gateway.sh start' or 'gateway.sh stop' or 'gateway.sh restart'"
 fi
