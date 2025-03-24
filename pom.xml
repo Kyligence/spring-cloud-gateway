@@ -63,7 +63,7 @@
 		<protobuf.version>3.21.7</protobuf.version>
 		<snakeyaml.version>2.0</snakeyaml.version>
 		<spring.boot.version>2.7.18</spring.boot.version>
-		<spring-security.version>5.7.12</spring-security.version>
+		<spring-security.version>5.7.13</spring-security.version>
 	</properties>
 
 	<dependencyManagement>
@@ -198,7 +198,7 @@
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-web</artifactId>
-				<version>5.3.33</version>
+				<version>5.3.34</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
