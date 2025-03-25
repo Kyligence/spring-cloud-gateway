@@ -38,10 +38,8 @@ public class KylinRefreshRouteTableScheduler implements ApplicationEventPublishe
 
 	protected ApplicationEventPublisher publisher;
 
-	@Autowired
 	private AbstractGatewayControllerEndpoint gatewayControllerEndpoint;
 
-	@Autowired
 	private LoadBalancerClientFilter loadBalancerClientFilter;
 
 	private IRouteTableReader routeTableReader;
