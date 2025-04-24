@@ -6,6 +6,8 @@ public class KylinRouteConstant {
 
 	}
 
+	public static final String KYLIN_QUERY_ROUTE_PREDICATE = "KylinQuery";
+
 	public static final String KYLIN_ROUTE_PREDICATE = "Kylin";
 
 	public static final String KYLIN_USER_ROUTE_PREDICATE = "KylinUser";

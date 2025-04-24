@@ -16,6 +16,8 @@ import org.springframework.boot.web.reactive.error.DefaultErrorAttributes;
 import org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration;
 import org.springframework.cloud.gateway.config.GatewayLoadBalancerClientAutoConfiguration;
 import io.kyligence.kap.gateway.predicate.KylinRoutePredicateFactory;
+import io.kyligence.kap.gateway.predicate.KylinQueryRoutePredicateFactory;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.DispatcherHandler;
@@ -33,6 +35,11 @@ public class KylinGatewayAutoConfiguration {
 	@Bean
 	public KylinRoutePredicateFactory kylinRoutePredicateFactory() {
 		return new KylinRoutePredicateFactory();
+	}
+
+	@Bean
+	public KylinQueryRoutePredicateFactory kylinRouteQueryPredicateFactory() {
+		return new KylinQueryRoutePredicateFactory();
 	}
 
 	@Bean

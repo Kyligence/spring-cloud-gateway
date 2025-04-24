@@ -15,4 +15,7 @@ public enum KylinResourceGroupTypeEnum {
 
 	VIP,
 
+	// query request in a project
+	QUERY_ONLY,
+
 }

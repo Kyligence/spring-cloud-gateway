@@ -31,6 +31,7 @@ import static io.kyligence.kap.gateway.constant.KylinRouteConstant.DEFAULT_RESOU
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.GLOBAL_RESOURCE_GROUP;
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.KYLIN_GLOBAL_ROUTE_PREDICATE;
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.KYLIN_ROUTE_PREDICATE;
+import static io.kyligence.kap.gateway.constant.KylinRouteConstant.KYLIN_QUERY_ROUTE_PREDICATE;
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.KYLIN_USER_ROUTE_PREDICATE;
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.PREDICATE_ARG_KEY_0;
 import static io.kyligence.kap.gateway.constant.KylinRouteConstant.PREDICATE_ARG_KEY_1;
@@ -91,6 +92,11 @@ public class StandardRouteTableTransformer implements RouteTableTransformer {
 
 		KylinResourceGroupTypeEnum resourceGroupTypeEnum = KylinResourceGroupTypeEnum.valueOf(rawRoute.getType());
 		switch (resourceGroupTypeEnum) {
+			case QUERY_ONLY:
+				predicateDefinition.getArgs().put(PREDICATE_ARG_KEY_0, rawRoute.getProject());
+				routeDefinition.setOrder(rawRoute.getOrder());
+				predicateDefinition.setName(KYLIN_QUERY_ROUTE_PREDICATE);
+				break;
 			case QUERY:
 				predicateDefinition.getArgs().put(PREDICATE_ARG_KEY_0, rawRoute.getProject());
 				routeDefinition.setOrder(rawRoute.getOrder());
