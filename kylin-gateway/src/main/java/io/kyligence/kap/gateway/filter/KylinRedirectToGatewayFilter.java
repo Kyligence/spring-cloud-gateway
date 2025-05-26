@@ -38,10 +38,13 @@ public class KylinRedirectToGatewayFilter implements GlobalFilter, Ordered {
 					HttpHeaders headers = getDelegate().getHeaders();
 					String location = headers.getFirst(HttpHeaders.LOCATION);
 
-					int i;
+					int i=0;
 					if (StringUtils.isEmpty(location)) {
 						// Nothing to do
-					} else if ((i = location.indexOf('/', 8)) < 0) {
+					} else if (StringUtils.startsWith(location, "http") && (i = location.indexOf('/', 8)) < 0) {
+						// ke api redirect: "/kylin/api/recommendations/xxx" redirect to "/kylin/api/models/recommendations"
+						// add on 20250526, StringUtils.startsWith(location, "http")
+
 						// redirect URI must be have sub url, like
 						// http://authoriy/kylin/api/xxxx
 						logger.error("Can not redirect URI, cause by location format: {}", location);
