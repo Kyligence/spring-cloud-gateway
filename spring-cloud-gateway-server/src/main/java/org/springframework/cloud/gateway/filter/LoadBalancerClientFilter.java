@@ -113,6 +113,8 @@ public class LoadBalancerClientFilter implements GlobalFilter, Ordered {
 			log.trace("LoadBalancerClientFilter url chosen: " + requestUrl);
 		}
 
+		log.info("target:"+requestUrl);
+
 		// for ribbon client
 		exchange.getAttributes().put(GATEWAY_REQUEST_URL_ATTR, requestUrl);
 		return chain.filter(exchange);
