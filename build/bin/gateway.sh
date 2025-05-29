@@ -47,7 +47,7 @@ function start_gateway() {
 
     JAVA_OPTS="-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${GATEWAY_HOME}/logs -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:${GATEWAY_HOME}/logs/gc-%t-%p.log"
 
-    nohup java $JAVA_OPTS -Xms4g -Xmx4g -Dspring.profiles.active=prod -Dreactor.netty.http.server.accessLogEnabled=true -Dgateway.home=${GATEWAY_HOME} -Dfile.encoding=UTF-8 -Dlogging.path=${GATEWAY_HOME}/logs -Dspring.config.additional-location=${gateway_properties} -Dloader.path="${GATEWAY_HOME}/server/jars,${GATEWAY_HOME}/server/ext" -jar gateway.jar >> ${GATEWAY_HOME}/logs/gateway.log 2>&1 < /dev/null & echo $! > ${GATEWAY_HOME}/pid &
+    nohup java $JAVA_OPTS -Xms2g -Xmx4g -Dspring.profiles.active=prod -Dreactor.netty.http.server.accessLogEnabled=true -Dgateway.home=${GATEWAY_HOME} -Dfile.encoding=UTF-8 -Dlogging.path=${GATEWAY_HOME}/logs -Dspring.config.additional-location=${gateway_properties} -Dloader.path="${GATEWAY_HOME}/server/jars,${GATEWAY_HOME}/server/ext" -jar gateway.jar >> ${GATEWAY_HOME}/logs/gateway.log 2>&1 < /dev/null & echo $! > ${GATEWAY_HOME}/pid &
 
     PID=`cat ${GATEWAY_HOME}/pid`
     echo $(date "+%Y-%m-%d %H:%M:%S ") "new Gateway process pid is "${PID} >> ${GATEWAY_HOME}/logs/gateway.log
