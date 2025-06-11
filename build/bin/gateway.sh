@@ -47,7 +47,15 @@ function start_gateway() {
 
     JAVA_OPTS="-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${GATEWAY_HOME}/logs -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:${GATEWAY_HOME}/logs/gc-%t-%p.log"
 
-    nohup java $JAVA_OPTS -Xms2g -Xmx4g -Dspring.profiles.active=prod -Dreactor.netty.http.server.accessLogEnabled=true -Dgateway.home=${GATEWAY_HOME} -Dfile.encoding=UTF-8 -Dlogging.path=${GATEWAY_HOME}/logs -Dspring.config.additional-location=${gateway_properties} -Dloader.path="${GATEWAY_HOME}/server/jars,${GATEWAY_HOME}/server/ext" -jar gateway.jar >> ${GATEWAY_HOME}/logs/gateway.log 2>&1 < /dev/null & echo $! > ${GATEWAY_HOME}/pid &
+    #获取系统总内存大小(单位字节)
+    total_memory=$(grep MemTotal /proc/meminfo | awk '{print $2 * 1024}')
+    #计算分配给JVM的内存大小(单位字节)
+    allocated_memory=$(($total_memory * 2 / 3))
+    #设置JVM内存参数
+    if [[ $allocated_memory -gt 4294967296 ]]; then
+        allocated_memory=4294967296  # 限制最大内存为4GB
+    fi
+    nohup java $JAVA_OPTS -Xms{allocated_memory} -Xmx{allocated_memory} -Dspring.profiles.active=prod -Dreactor.netty.http.server.accessLogEnabled=true -Dgateway.home=${GATEWAY_HOME} -Dfile.encoding=UTF-8 -Dlogging.path=${GATEWAY_HOME}/logs -Dspring.config.additional-location=${gateway_properties} -Dloader.path="${GATEWAY_HOME}/server/jars,${GATEWAY_HOME}/server/ext" -jar gateway.jar >> ${GATEWAY_HOME}/logs/gateway.log 2>&1 < /dev/null & echo $! > ${GATEWAY_HOME}/pid &
 
     PID=`cat ${GATEWAY_HOME}/pid`
     echo $(date "+%Y-%m-%d %H:%M:%S ") "new Gateway process pid is "${PID} >> ${GATEWAY_HOME}/logs/gateway.log
