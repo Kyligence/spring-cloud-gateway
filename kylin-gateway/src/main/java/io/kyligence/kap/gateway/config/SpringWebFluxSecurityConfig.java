@@ -1,6 +1,9 @@
 package io.kyligence.kap.gateway.config;
 
 import com.google.common.collect.Lists;
+
+import java.nio.charset.Charset;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
@@ -57,6 +60,13 @@ public class SpringWebFluxSecurityConfig {
 
 	@Bean
 	public MapReactiveUserDetailsService reactiveUserDetailsService(PasswordEncoder passwordEncoder) {
+		if (password == null) {
+            throw new IllegalArgumentException("password cannot be null");
+        }
+        if (password.getBytes(Charset.defaultCharset()).length > 72) {
+            throw new IllegalArgumentException("password cannot be more than 72 bytes");
+        }
+
 		final UserDetails userDetails = User.withUsername(username)
 				.password(passwordEncoder.encode(password))
 				.roles(StringUtils.toStringArray(Lists.newArrayList("ADMIN")))
